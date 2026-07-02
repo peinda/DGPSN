@@ -8,7 +8,8 @@
         <title inertia>DGPSN</title>
 
         @routes
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @viteReactRefresh
+        @vite(['resources/css/app.css', 'resources/js/app.jsx'])
         @inertiaHead
     </head>
     <body class="antialiased bg-gray-50 text-gray-900">
