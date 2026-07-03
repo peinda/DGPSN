@@ -25,8 +25,6 @@ const DOCUMENTS_PAR_TYPE = {
     EVENT_REL: [
         { label: "Demande manuscrite adressée à l'autorité compétente", requis: true },
         { label: "Copie de la pièce nationale d'identité", requis: true },
-        { label: "Attestation de situation socioéconomique ou certificat de résidence", requis: true },
-        { label: "Certificat d'indigence en cours de validité", requis: true },
     ],
     URGENCE: [
         { label: "Demande manuscrite adressée à l'autorité compétente", requis: true },

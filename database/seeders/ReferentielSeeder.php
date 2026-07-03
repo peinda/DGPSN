@@ -220,6 +220,59 @@ class ReferentielSeeder extends Seeder
             ['nom' => 'Pharmacie du Point E',               'type' => TypePrestataire::PHARMACIE, 'commune' => 'Fann-Point E-Amitié', 'telephone' => '338254040'],
             ['nom' => 'Pharmacie Sacré Cœur',              'type' => TypePrestataire::PHARMACIE, 'commune' => 'Mermoz-Sacré Cœur',   'telephone' => '338697171'],
             ['nom' => 'Pharmacie Guédiawaye',              'type' => TypePrestataire::PHARMACIE, 'commune' => 'Guédiawaye',     'telephone' => '338361212'],
+
+            // Thiès
+            ['nom' => 'Centre Hospitalier Régional de Mbour', 'type' => TypePrestataire::HOPITAL,   'commune' => 'Mbour',    'telephone' => '339571010'],
+            ['nom' => 'Pharmacie de Thiès',                   'type' => TypePrestataire::PHARMACIE, 'commune' => 'Thiès Nord', 'telephone' => '339511212'],
+
+            // Diourbel
+            ['nom' => 'Hôpital Matlaboul Fawzeyni',        'type' => TypePrestataire::HOPITAL,   'commune' => 'Touba',    'telephone' => '339781010'],
+            ['nom' => 'Centre Hospitalier de Diourbel',    'type' => TypePrestataire::HOPITAL,   'commune' => 'Diourbel', 'telephone' => '339711010'],
+            ['nom' => 'Pharmacie de Touba',                'type' => TypePrestataire::PHARMACIE, 'commune' => 'Touba',    'telephone' => '339781313'],
+
+            // Fatick
+            ['nom' => 'Hôpital Régional de Fatick',        'type' => TypePrestataire::HOPITAL,   'commune' => 'Fatick',   'telephone' => '339491010'],
+            ['nom' => 'Pharmacie de Fatick',                'type' => TypePrestataire::PHARMACIE, 'commune' => 'Fatick',   'telephone' => '339491414'],
+
+            // Kaolack
+            ['nom' => 'Hôpital El Hadji Ibrahima Niasse',  'type' => TypePrestataire::HOPITAL,   'commune' => 'Kaolack',  'telephone' => '339411010'],
+            ['nom' => 'Pharmacie de Kaolack',               'type' => TypePrestataire::PHARMACIE, 'commune' => 'Kaolack',  'telephone' => '339411515'],
+
+            // Ziguinchor
+            ['nom' => 'Hôpital de la Paix de Ziguinchor',  'type' => TypePrestataire::HOPITAL,   'commune' => 'Ziguinchor', 'telephone' => '339911010'],
+            ['nom' => 'Pharmacie de Ziguinchor',            'type' => TypePrestataire::PHARMACIE, 'commune' => 'Ziguinchor', 'telephone' => '339911616'],
+
+            // Saint-Louis
+            ['nom' => 'Hôpital Régional de Saint-Louis',   'type' => TypePrestataire::HOPITAL,   'commune' => 'Saint-Louis', 'telephone' => '339611010'],
+            ['nom' => 'Pharmacie de Saint-Louis',           'type' => TypePrestataire::PHARMACIE, 'commune' => 'Saint-Louis', 'telephone' => '339611717'],
+
+            // Louga
+            ['nom' => 'Hôpital Amadou Sakhir Ndieguène',   'type' => TypePrestataire::HOPITAL,   'commune' => 'Louga',    'telephone' => '339671010'],
+            ['nom' => 'Pharmacie de Louga',                 'type' => TypePrestataire::PHARMACIE, 'commune' => 'Louga',    'telephone' => '339671818'],
+
+            // Tambacounda
+            ['nom' => 'Hôpital Régional Maguette Lô',      'type' => TypePrestataire::HOPITAL,   'commune' => 'Tambacounda', 'telephone' => '339811010'],
+            ['nom' => 'Pharmacie de Tambacounda',           'type' => TypePrestataire::PHARMACIE, 'commune' => 'Tambacounda', 'telephone' => '339811919'],
+
+            // Kolda
+            ['nom' => 'Hôpital Régional de Kolda',         'type' => TypePrestataire::HOPITAL,   'commune' => 'Kolda',    'telephone' => '339961010'],
+            ['nom' => 'Pharmacie de Kolda',                 'type' => TypePrestataire::PHARMACIE, 'commune' => 'Kolda',    'telephone' => '339962020'],
+
+            // Matam
+            ['nom' => 'Hôpital Régional de Matam',         'type' => TypePrestataire::HOPITAL,   'commune' => 'Matam',    'telephone' => '339661010'],
+            ['nom' => 'Pharmacie de Matam',                 'type' => TypePrestataire::PHARMACIE, 'commune' => 'Matam',    'telephone' => '339662121'],
+
+            // Kaffrine
+            ['nom' => 'Hôpital Régional de Kaffrine',      'type' => TypePrestataire::HOPITAL,   'commune' => 'Kaffrine', 'telephone' => '339461010'],
+            ['nom' => 'Pharmacie de Kaffrine',               'type' => TypePrestataire::PHARMACIE, 'commune' => 'Kaffrine', 'telephone' => '339462222'],
+
+            // Kédougou
+            ['nom' => 'Hôpital Régional de Kédougou',      'type' => TypePrestataire::HOPITAL,   'commune' => 'Kédougou', 'telephone' => '339851010'],
+            ['nom' => 'Pharmacie de Kédougou',               'type' => TypePrestataire::PHARMACIE, 'commune' => 'Kédougou', 'telephone' => '339852323'],
+
+            // Sédhiou
+            ['nom' => 'Hôpital Régional de Sédhiou',       'type' => TypePrestataire::HOPITAL,   'commune' => 'Sédhiou',  'telephone' => '339951010'],
+            ['nom' => 'Pharmacie de Sédhiou',                'type' => TypePrestataire::PHARMACIE, 'commune' => 'Sédhiou',  'telephone' => '339952424'],
         ];
 
         foreach ($prestataires as $data) {
