@@ -3,10 +3,12 @@
 namespace Database\Seeders;
 
 use App\Enums\StatutAnnee;
+use App\Enums\TypePrestataire;
 use App\Models\AnneeGestion;
 use App\Models\Commune;
 use App\Models\Departement;
 use App\Models\Evenement;
+use App\Models\Prestataire;
 use App\Models\Region;
 use App\Models\TypeAide;
 use Illuminate\Database\Seeder;
@@ -18,6 +20,7 @@ class ReferentielSeeder extends Seeder
         $this->seedRegions();
         $this->seedTypesAideEtEvenements();
         $this->seedAnneeGestion();
+        $this->seedPrestataires();
     }
 
     private function seedRegions(): void
@@ -200,5 +203,41 @@ class ReferentielSeeder extends Seeder
                 'date_ouverture' => '2026-01-01',
             ]
         );
+    }
+
+    private function seedPrestataires(): void
+    {
+        $prestataires = [
+            ['nom' => 'Hôpital Aristide Le Dantec',        'type' => TypePrestataire::HOPITAL,   'commune' => 'Dakar-Plateau',  'telephone' => '338211100'],
+            ['nom' => 'Hôpital Principal de Dakar',        'type' => TypePrestataire::HOPITAL,   'commune' => 'Dakar-Plateau',  'telephone' => '338399292'],
+            ['nom' => 'Hôpital Général de Grand Yoff',     'type' => TypePrestataire::HOPITAL,   'commune' => 'Grand Yoff',     'telephone' => '338592727'],
+            ['nom' => 'Hôpital Abass Ndao',                'type' => TypePrestataire::HOPITAL,   'commune' => 'Médina',         'telephone' => '338219071'],
+            ['nom' => 'Centre Hospitalier Régional Thiès', 'type' => TypePrestataire::HOPITAL,   'commune' => 'Thiès Nord',     'telephone' => '339512345'],
+            ['nom' => 'Clinique de la Madeleine',          'type' => TypePrestataire::CLINIQUE,  'commune' => 'Fann-Point E-Amitié', 'telephone' => '338215566'],
+            ['nom' => 'Clinique Pasteur',                  'type' => TypePrestataire::CLINIQUE,  'commune' => 'Mermoz-Sacré Cœur',   'telephone' => '338602020'],
+            ['nom' => 'Clinique du Cap',                   'type' => TypePrestataire::CLINIQUE,  'commune' => 'Almadies',       'telephone' => '338697070'],
+            ['nom' => 'Pharmacie Guigon',                  'type' => TypePrestataire::PHARMACIE, 'commune' => 'Dakar-Plateau',  'telephone' => '338215050'],
+            ['nom' => 'Pharmacie du Point E',               'type' => TypePrestataire::PHARMACIE, 'commune' => 'Fann-Point E-Amitié', 'telephone' => '338254040'],
+            ['nom' => 'Pharmacie Sacré Cœur',              'type' => TypePrestataire::PHARMACIE, 'commune' => 'Mermoz-Sacré Cœur',   'telephone' => '338697171'],
+            ['nom' => 'Pharmacie Guédiawaye',              'type' => TypePrestataire::PHARMACIE, 'commune' => 'Guédiawaye',     'telephone' => '338361212'],
+        ];
+
+        foreach ($prestataires as $data) {
+            $commune = Commune::where('nom', $data['commune'])->first();
+
+            Prestataire::firstOrCreate(
+                ['nom' => $data['nom']],
+                [
+                    'type'           => $data['type'],
+                    'telephone'      => $data['telephone'],
+                    'email'          => null,
+                    'adresse'        => null,
+                    'region_id'      => $commune?->departement?->region_id,
+                    'departement_id' => $commune?->departement_id,
+                    'commune_id'     => $commune?->id,
+                    'actif'          => true,
+                ]
+            );
+        }
     }
 }
