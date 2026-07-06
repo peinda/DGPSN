@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class TypeAide extends Model
 {
+    use HasFactory;
+
     protected $table = 'types_aide';
 
     protected $fillable = ['nom', 'code', 'description', 'actif', 'requiert_periode'];

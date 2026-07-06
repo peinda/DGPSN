@@ -255,7 +255,7 @@ class DemandesController extends Controller
         return back()->with('success', "Demande {$demande->reference} soumise au comité.");
     }
 
-    public function edit(Demande $demande): Response
+    public function edit(Demande $demande): Response|RedirectResponse
     {
         if ($demande->statut !== StatutDemande::BROUILLON) {
             return redirect()->route('demandes.show', $demande)

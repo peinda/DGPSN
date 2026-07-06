@@ -99,7 +99,7 @@ class UserController extends Controller
         $user->update([
             'name'  => $data['name'],
             'email' => $data['email'],
-            ...($data['password'] ? ['password' => Hash::make($data['password'])] : []),
+            ...(($data['password'] ?? null) ? ['password' => Hash::make($data['password'])] : []),
         ]);
 
         $user->syncRoles([$data['role']]);
