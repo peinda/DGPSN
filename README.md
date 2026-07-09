@@ -2,6 +2,10 @@
 
 Système de gestion numérique des demandes d'aide sociale pour la **Délégation Générale à la Protection Sociale et à la Solidarité Nationale** (DGPSN) du Sénégal.
 
+📚 **Documentation technique complète** : [docs/README.md](docs/README.md) (architecture, modèle de données, workflow métier, routes, permissions, frontend, tests).
+
+📄 **Rapport de présentation du projet** (pour la hiérarchie) : [docs/RAPPORT-PROJET-DGPSN.md](docs/RAPPORT-PROJET-DGPSN.md).
+
 ---
 
 ## Stack technique
@@ -9,7 +13,7 @@ Système de gestion numérique des demandes d'aide sociale pour la **Délégatio
 | Composant | Technologie |
 |---|---|
 | Backend | Laravel 13 (PHP 8.3+) |
-| Frontend | Vue 3 + Inertia.js + TailwindCSS |
+| Frontend | React 18 + Inertia.js + TailwindCSS |
 | Base de données | SQLite (dev) / PostgreSQL 15+ (prod) |
 | Rôles & permissions | Spatie Laravel Permission |
 | Export PDF | barryvdh/laravel-dompdf |
@@ -56,7 +60,7 @@ Cette commande effectue en une seule fois :
 php artisan db:seed
 ```
 
-Crée les rôles, les comptes de test, les référentiels (14 régions, 45 départements, 336 communes, types d'aide, événements, années de gestion).
+Crée les rôles, les comptes de test, les référentiels (14 régions, 45 départements, 336 communes, types d'aide, événements, années de gestion, prestataires agréés), ainsi que des citoyens et demandes de test couvrant tous les statuts.
 
 ---
 
@@ -169,7 +173,8 @@ database/
 └── seeders/
     ├── RoleSeeder.php
     ├── AdminUserSeeder.php
-    └── ReferentielSeeder.php
+    ├── ReferentielSeeder.php
+    └── DemandesSeeder.php   # Citoyens et demandes de test (tous statuts)
 ```
 
 ---
