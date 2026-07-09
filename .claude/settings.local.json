@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "PowerShell(& \"C:\\\\Program Files\\\\MySQL\\\\mysql-8.4.3-winx64\\\\bin\\\\mysql.exe\" -u root -e \"CREATE DATABASE IF NOT EXISTS dgpsn CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;\" 2>&1)"
+      "PowerShell(& \"C:\\\\Program Files\\\\MySQL\\\\mysql-8.4.3-winx64\\\\bin\\\\mysql.exe\" -u root -e \"CREATE DATABASE IF NOT EXISTS dgpsn CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;\" 2>&1)",
+      "Bash(php artisan tinker '--execute= *)",
+      "Bash(rm -rf \"C:\\\\Users\\\\Peinda\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\d--Prise-EnChargeDgpsnReact\\\\9d8554f9-e9fe-479f-ad85-aa055246de81\\\\scratchpad\\\\node_modules\" \"C:\\\\Users\\\\Peinda\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\d--Prise-EnChargeDgpsnReact\\\\9d8554f9-e9fe-479f-ad85-aa055246de81\\\\scratchpad\\\\package.json\" \"C:\\\\Users\\\\Peinda\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\d--Prise-EnChargeDgpsnReact\\\\9d8554f9-e9fe-479f-ad85-aa055246de81\\\\scratchpad\"/*.mjs \"C:\\\\Users\\\\Peinda\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\d--Prise-EnChargeDgpsnReact\\\\9d8554f9-e9fe-479f-ad85-aa055246de81\\\\scratchpad\"/fake.pdf)"
     ]
   }
 }

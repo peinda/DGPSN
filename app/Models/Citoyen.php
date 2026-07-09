@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\Sexe;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,6 +14,18 @@ class Citoyen extends Model
     use HasFactory;
 
     protected $fillable = ['cin', 'nom', 'prenom', 'telephone', 'adresse', 'commune_id'];
+
+    protected $appends = ['sexe'];
+
+    /**
+     * Déduit du premier chiffre du CIN sénégalais : 1 = masculin, 2 = féminin.
+     */
+    protected function sexe(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => str_starts_with($this->cin, '2') ? Sexe::FEMININ : Sexe::MASCULIN,
+        );
+    }
 
     public function commune(): BelongsTo
     {

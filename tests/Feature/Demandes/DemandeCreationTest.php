@@ -131,6 +131,30 @@ class DemandeCreationTest extends TestCase
         $this->assertEquals(0, Demande::count());
     }
 
+    public function test_soumettre_apres_succeeds_when_periode_ouverture_id_is_supplied_and_active(): void
+    {
+        Storage::fake('public');
+        $this->actingAsAgent();
+        $citoyen   = Citoyen::factory()->create();
+        $type      = TypeAide::factory()->requiertPeriode()->create();
+        $evenement = Evenement::factory()->create(['type_aide_id' => $type->id]);
+        $annee     = AnneeGestion::factory()->create();
+        $periode   = PeriodeOuverture::factory()->create(['evenement_id' => $evenement->id, 'annee_gestion_id' => $annee->id]);
+
+        $this->post(route('demandes.store'), [
+            'citoyen_id'           => $citoyen->id,
+            'type_aide_id'         => $type->id,
+            'evenement_id'         => $evenement->id,
+            'annee_gestion_id'     => $annee->id,
+            'periode_ouverture_id' => $periode->id,
+            'pieces_jointes'       => [UploadedFile::fake()->create('justificatif.pdf', 100, 'application/pdf')],
+            '_soumettre_apres'     => '1',
+        ]);
+
+        $demande = Demande::first();
+        $this->assertEquals(StatutDemande::SOUMIS, $demande->statut);
+    }
+
     public function test_prestataires_are_attached_and_montant_total_computed(): void
     {
         $this->actingAsAgent();

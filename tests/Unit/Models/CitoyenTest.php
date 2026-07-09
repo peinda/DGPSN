@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Models;
 
+use App\Enums\Sexe;
 use App\Models\AnneeGestion;
 use App\Models\Citoyen;
 use App\Models\Demande;
@@ -18,6 +19,27 @@ class CitoyenTest extends TestCase
         $citoyen = Citoyen::factory()->create(['nom' => 'DIOP', 'prenom' => 'Awa']);
 
         $this->assertEquals('Awa DIOP', $citoyen->nomComplet());
+    }
+
+    public function test_sexe_is_masculin_when_cin_starts_with_1(): void
+    {
+        $citoyen = Citoyen::factory()->create(['cin' => '123456789012']);
+
+        $this->assertEquals(Sexe::MASCULIN, $citoyen->sexe);
+    }
+
+    public function test_sexe_is_feminin_when_cin_starts_with_2(): void
+    {
+        $citoyen = Citoyen::factory()->create(['cin' => '223456789012']);
+
+        $this->assertEquals(Sexe::FEMININ, $citoyen->sexe);
+    }
+
+    public function test_sexe_is_appended_to_array_representation(): void
+    {
+        $citoyen = Citoyen::factory()->create(['cin' => '223456789012']);
+
+        $this->assertArrayHasKey('sexe', $citoyen->toArray());
     }
 
     public function test_est_recurrent_true_when_prior_year_has_approuve_demande(): void

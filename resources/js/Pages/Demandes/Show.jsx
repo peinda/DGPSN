@@ -118,6 +118,7 @@ export default function DemandesShow({ demande }) {
                             <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
                                 <div><dt className="text-gray-500 text-xs">Nom complet</dt><dd className="font-medium text-gray-900">{demande.citoyen?.prenom} {demande.citoyen?.nom}</dd></div>
                                 <div><dt className="text-gray-500 text-xs">CIN</dt><dd className="font-mono text-gray-700">{demande.citoyen?.cin}</dd></div>
+                                <div><dt className="text-gray-500 text-xs">Sexe</dt><dd className="text-gray-700">{demande.citoyen?.sexe === 'f' ? 'Féminin' : 'Masculin'}</dd></div>
                                 <div><dt className="text-gray-500 text-xs">Téléphone</dt><dd className="text-gray-700">{demande.citoyen?.telephone ?? '—'}</dd></div>
                                 <div><dt className="text-gray-500 text-xs">Localité</dt><dd className="text-gray-700">{demande.citoyen?.commune?.nom ?? '—'}</dd></div>
                             </dl>

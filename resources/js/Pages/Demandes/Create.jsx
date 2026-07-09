@@ -47,6 +47,11 @@ function telErreurLocale(tel) {
     return '';
 }
 
+function sexeLabel(cin) {
+    if (!cin) return null;
+    return cin.startsWith('2') ? 'Féminin' : 'Masculin';
+}
+
 function capitaliserPrenom(val) {
     if (!val) return '';
     return val.charAt(0).toUpperCase() + val.slice(1);
@@ -105,6 +110,21 @@ export default function DemandesCreate({
         form.setData('pieces_jointes', []);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [typeAideCode]);
+
+    // Résout la période d'ouverture active correspondant à l'événement + année sélectionnés,
+    // sans quoi le backend ne peut jamais valider la soumission des types d'aide qui l'exigent.
+    useEffect(() => {
+        if (!form.data.evenement_id || !form.data.annee_gestion_id) {
+            if (form.data.periode_ouverture_id) form.setData('periode_ouverture_id', '');
+            return;
+        }
+        const periodeActive = periodes.find((p) =>
+            String(p.evenement_id) === String(form.data.evenement_id) &&
+            String(p.annee_gestion_id) === String(form.data.annee_gestion_id)
+        );
+        form.setData('periode_ouverture_id', periodeActive ? periodeActive.id : '');
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [form.data.evenement_id, form.data.annee_gestion_id]);
 
     const cinValide = form.data.cin.length >= 12 && form.data.cin.length <= 14 && /^[12]/.test(form.data.cin);
 
@@ -236,7 +256,8 @@ export default function DemandesCreate({
         form.transform((data) => ({
             ...data,
             _soumettre_apres: mode === 'soumettre',
-        })).post(route('demandes.store'), {
+        }));
+        form.post(route('demandes.store'), {
             forceFormData: true,
         });
     }
@@ -313,6 +334,9 @@ export default function DemandesCreate({
                                 {form.data.cin.length}/14
                             </span>
                         </div>
+                        {!citoyenTrouve && cinValide && (
+                            <p className="mt-2 inline-block text-xs text-gray-500 border border-gray-200 rounded-lg px-2.5 py-1"><span className="font-bold">Sexe</span> : <span className="font-medium text-gray-700">{sexeLabel(form.data.cin)}</span></p>
+                        )}
                     </div>
 
                     {citoyenTrouve && (
@@ -320,7 +344,7 @@ export default function DemandesCreate({
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-sm font-semibold text-green-800">{citoyenTrouve.prenom} {citoyenTrouve.nom}</p>
-                                    <p className="text-xs text-green-600">CIN : {citoyenTrouve.cin} — {citoyenTrouve.commune?.nom ?? 'Localité non renseignée'}</p>
+                                    <p className="text-xs text-green-600">CIN : {citoyenTrouve.cin} — {citoyenTrouve.sexe === 'f' ? 'Féminin' : 'Masculin'} — {citoyenTrouve.commune?.nom ?? 'Localité non renseignée'}</p>
                                 </div>
                                 <button onClick={reinitialiserCitoyen} className="text-xs text-green-700 hover:text-green-900 font-medium">Changer</button>
                             </div>

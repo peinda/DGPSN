@@ -55,6 +55,7 @@ export default function CitoyensIndex({ citoyens = defaultCitoyens, filters = {}
                         <tr className="text-xs text-gray-500 bg-gray-50 border-b border-gray-100">
                             <th className="text-left px-5 py-3 font-medium">CIN</th>
                             <th className="text-left px-4 py-3 font-medium">Nom complet</th>
+                            <th className="text-left px-4 py-3 font-medium">Sexe</th>
                             <th className="text-left px-4 py-3 font-medium">Téléphone</th>
                             <th className="text-left px-4 py-3 font-medium">Localité</th>
                             <th className="text-right px-4 py-3 font-medium">Demandes</th>
@@ -66,6 +67,7 @@ export default function CitoyensIndex({ citoyens = defaultCitoyens, filters = {}
                             <tr key={c.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
                                 <td className="px-5 py-3 font-mono text-xs text-gray-600">{c.cin}</td>
                                 <td className="px-4 py-3 font-medium text-gray-900">{c.prenom} {c.nom}</td>
+                                <td className="px-4 py-3 text-gray-500 text-xs">{c.sexe === 'f' ? 'Féminin' : 'Masculin'}</td>
                                 <td className="px-4 py-3 text-gray-600">{c.telephone ?? '—'}</td>
                                 <td className="px-4 py-3 text-gray-500 text-xs">{c.commune?.nom ?? '—'}</td>
                                 <td className="px-4 py-3 text-right">
@@ -83,7 +85,7 @@ export default function CitoyensIndex({ citoyens = defaultCitoyens, filters = {}
                         ))}
                         {!citoyens.data?.length && (
                             <tr>
-                                <td colSpan={6} className="px-5 py-12 text-center text-sm text-gray-400">Aucun citoyen enregistré.</td>
+                                <td colSpan={7} className="px-5 py-12 text-center text-sm text-gray-400">Aucun citoyen enregistré.</td>
                             </tr>
                         )}
                     </tbody>

@@ -138,8 +138,15 @@ Route::middleware('auth')->group(function () {
         Route::get('/export-excel', [RapportsController::class, 'exportExcel'])->name('export-excel');
     });
 
-    Route::post('/notifications/lire',         fn () => Auth::user()->unreadNotifications()->update(['read_at' => now()]))->name('notifications.lire');
-    Route::post('/notifications/{id}/lire',    fn (string $id) => Auth::user()->notifications()->where('id', $id)->update(['read_at' => now()]))->name('notifications.lire-une');
+    Route::post('/notifications/lire', function () {
+        Auth::user()->unreadNotifications()->update(['read_at' => now()]);
+        return back();
+    })->name('notifications.lire');
+
+    Route::post('/notifications/{id}/lire', function (string $id) {
+        Auth::user()->notifications()->where('id', $id)->update(['read_at' => now()]);
+        return back();
+    })->name('notifications.lire-une');
 
     Route::get('/parametres',                  [ParametresController::class, 'index'])->name('parametres.index');
     Route::put('/parametres/profil',           [ParametresController::class, 'updateProfil'])->name('parametres.update-profil');

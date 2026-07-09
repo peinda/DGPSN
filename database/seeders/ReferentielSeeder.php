@@ -8,6 +8,7 @@ use App\Models\AnneeGestion;
 use App\Models\Commune;
 use App\Models\Departement;
 use App\Models\Evenement;
+use App\Models\PeriodeOuverture;
 use App\Models\Prestataire;
 use App\Models\Region;
 use App\Models\TypeAide;
@@ -20,6 +21,7 @@ class ReferentielSeeder extends Seeder
         $this->seedRegions();
         $this->seedTypesAideEtEvenements();
         $this->seedAnneeGestion();
+        $this->seedPeriodesOuverture();
         $this->seedPrestataires();
     }
 
@@ -203,6 +205,30 @@ class ReferentielSeeder extends Seeder
                 'date_ouverture' => '2026-01-01',
             ]
         );
+    }
+
+    /**
+     * Crée une période d'ouverture active pour chaque événement dont le type d'aide
+     * requiert une période (couvre l'année de gestion en cours), afin que ces
+     * types d'aide restent réellement soumissibles.
+     */
+    private function seedPeriodesOuverture(): void
+    {
+        $evenements = Evenement::whereHas('typeAide', fn ($q) => $q->where('requiert_periode', true))->get();
+        $annees     = AnneeGestion::where('statut', StatutAnnee::OUVERT)->get();
+
+        foreach ($annees as $annee) {
+            foreach ($evenements as $evenement) {
+                PeriodeOuverture::firstOrCreate(
+                    ['evenement_id' => $evenement->id, 'annee_gestion_id' => $annee->id],
+                    [
+                        'date_debut' => "{$annee->annee}-01-01",
+                        'date_fin'   => "{$annee->annee}-12-31",
+                        'actif'      => true,
+                    ]
+                );
+            }
+        }
     }
 
     private function seedPrestataires(): void
