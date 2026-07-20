@@ -1,8 +1,15 @@
 import { useState } from 'react';
-import { Link, router } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout.jsx';
 
-const COULEUR_MAP = { green: '#16a34a', blue: '#3b82f6', purple: '#9333ea', red: '#ef4444', gray: '#9ca3af', slate: '#64748b' };
+const STATUT_STYLES = {
+    green:  { bg: 'bg-green-50',  border: 'border-green-200',  text: 'text-green-700',  bar: 'bg-green-500' },
+    blue:   { bg: 'bg-blue-50',   border: 'border-blue-200',   text: 'text-blue-700',   bar: 'bg-blue-500' },
+    purple: { bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-700', bar: 'bg-purple-500' },
+    red:    { bg: 'bg-red-50',    border: 'border-red-200',    text: 'text-red-700',    bar: 'bg-red-500' },
+    gray:   { bg: 'bg-gray-50',   border: 'border-gray-200',   text: 'text-gray-700',   bar: 'bg-gray-400' },
+    slate:  { bg: 'bg-slate-50',  border: 'border-slate-200',  text: 'text-slate-700',  bar: 'bg-slate-500' },
+};
 
 export default function RapportsIndex({
     parStatut = [],
@@ -14,6 +21,12 @@ export default function RapportsIndex({
     totalGeneral = 0,
     filters = {},
 }) {
+    const { props } = usePage();
+    const isAgent = props.auth?.user?.role === 'agent';
+    const parStatutVisible = isAgent ? parStatut.filter((s) => !['approuve', 'rejete'].includes(s.statut)) : parStatut;
+    const permissions = props.auth?.user?.permissions ?? [];
+    const peutExporter = permissions.includes('rapports.exporter');
+
     const [localFilters, setLocalFilters] = useState({
         annee_gestion_id: filters.annee_gestion_id ?? '',
         type_aide_id: filters.type_aide_id ?? '',
@@ -37,10 +50,6 @@ export default function RapportsIndex({
         return Math.round((val / maxType) * 100);
     }
 
-    function couleurStatut(couleur) {
-        return COULEUR_MAP[couleur] ?? '#9ca3af';
-    }
-
     return (
         <AppLayout title="Rapports & Statistiques">
             <div className="flex items-center justify-between mb-6">
@@ -48,10 +57,12 @@ export default function RapportsIndex({
                     <h1 className="text-xl font-bold text-gray-900">Rapports & Statistiques</h1>
                     <p className="text-sm text-gray-500 mt-0.5">Vue d'ensemble en temps réel des demandes de prise en charge.</p>
                 </div>
-                <Link href={route('rapports.exports')} className="inline-flex items-center gap-2 text-sm text-gray-600 bg-white border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-lg transition-colors">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                    Exports
-                </Link>
+                {peutExporter && (
+                    <Link href={route('rapports.exports')} className="inline-flex items-center gap-2 text-sm text-gray-600 bg-white border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-lg transition-colors">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        Exports
+                    </Link>
+                )}
             </div>
 
             {/* Filtres */}
@@ -74,14 +85,17 @@ export default function RapportsIndex({
             </div>
 
             {/* KPI par statut */}
-            <div className="grid grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
-                {parStatut.map((s) => (
-                    <div key={s.statut} className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm text-center">
-                        <p className="text-xs text-gray-500 mb-1">{s.label}</p>
-                        <p className="text-2xl font-bold text-gray-900">{s.count.toLocaleString('fr-FR')}</p>
-                        <div className="mt-2 h-1 rounded-full" style={{ backgroundColor: couleurStatut(s.couleur) }} />
-                    </div>
-                ))}
+            <div className="grid gap-3 mb-6" style={{ gridTemplateColumns: `repeat(${parStatutVisible.length}, minmax(0, 1fr))` }}>
+                {parStatutVisible.map((s) => {
+                    const style = STATUT_STYLES[s.couleur] ?? STATUT_STYLES.gray;
+                    return (
+                        <div key={s.statut} className={`rounded-xl border p-4 shadow-sm text-center transition-transform hover:-translate-y-0.5 ${style.bg} ${style.border}`}>
+                            <p className="text-xs text-gray-500 mb-1">{s.label}</p>
+                            <p className={`text-2xl font-bold ${style.text}`}>{s.count.toLocaleString('fr-FR')}</p>
+                            <div className={`mt-2 h-1.5 rounded-full ${style.bar}`} />
+                        </div>
+                    );
+                })}
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">

@@ -18,6 +18,7 @@ function iconClass(statut) {
 
 function formatDate(d) { return d ? new Date(d).toLocaleDateString('fr-FR') : '—'; }
 function formatMontant(n) { return n ? new Intl.NumberFormat('fr-FR').format(n) : '0'; }
+function cycleLabel(c) { return { jeune: 'Jeune', adulte: 'Adulte', vieillard: 'Vieillard' }[c] ?? c ?? '—'; }
 
 export default function CitoyensShow({ citoyen }) {
     const { props } = usePage();
@@ -130,6 +131,17 @@ export default function CitoyensShow({ citoyen }) {
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                                     </svg>
                                     <span className="text-gray-600">{citoyen.sexe === 'f' ? 'Féminin' : 'Masculin'}</span>
+                                </div>
+                                <div className="flex items-start gap-2">
+                                    <svg className="w-4 h-4 text-gray-300 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                    </svg>
+                                    <div>
+                                        <p className="text-gray-600">{formatDate(citoyen.date_naissance)}</p>
+                                        {citoyen.age != null && (
+                                            <p className="text-xs text-gray-400">{citoyen.age} ans — {cycleLabel(citoyen.cycle_vie)}</p>
+                                        )}
+                                    </div>
                                 </div>
                                 <div className="flex items-start gap-2">
                                     <svg className="w-4 h-4 text-gray-300 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">

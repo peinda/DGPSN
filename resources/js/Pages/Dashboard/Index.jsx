@@ -27,6 +27,11 @@ const defaultRepartitionData = [
     { label: 'Autres', value: 61, color: '#d1d5db' },
 ];
 
+const defaultGenreData = [
+    { label: 'Hommes', value: 0, color: '#3b82f6' },
+    { label: 'Femmes', value: 0, color: '#F5A623' },
+];
+
 const defaultDernieresDemandes = [
     { id: 1, reference: 'DPS-2025-1250', citoyen: 'Awa Fall', type: 'Assistance médicale', statut: 'en_attente', date: '21/05/2025' },
     { id: 2, reference: 'DPS-2025-1249', citoyen: 'Mamadou Diop', type: 'Tabaski', statut: 'approuvee', date: '21/05/2025' },
@@ -46,11 +51,13 @@ export default function DashboardIndex({
     stats = defaultStats,
     evolutionData = defaultEvolutionData,
     repartitionData = defaultRepartitionData,
+    genreData = defaultGenreData,
     dernieresDemandes = defaultDernieresDemandes,
     activiteRecente = defaultActiviteRecente,
 }) {
     const { props } = usePage();
     const userName = props.auth?.user?.name ?? 'Utilisateur';
+    const isAgent = props.auth?.user?.role === 'agent';
 
     return (
         <AppLayout title="Tableau de bord">
@@ -65,12 +72,12 @@ export default function DashboardIndex({
             </div>
 
             {/* KPI Cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-                <KpiCard label="Total demandes" value={stats.total} trend={stats.total_trend} color="green" icon="file" />
+            <div className="grid grid-cols-2 gap-4 mb-6 lg:grid-cols-5">
+                <KpiCard label={isAgent ? 'Mes demandes' : 'Total demandes'} value={stats.total} trend={stats.total_trend} color="green" icon="file" />
                 <KpiCard label="En attente" value={stats.en_attente} trend={stats.en_attente_trend} color="yellow" icon="clock" />
-                <KpiCard label="Approuvées" value={stats.approuvees} trend={stats.approuvees_trend} color="teal" icon="check" />
-                <KpiCard label="Rejetées" value={stats.rejetees} trend={stats.rejetees_trend} color="red" icon="x" />
-                <KpiCard label="Clôturées" value={stats.cloturees} trend={stats.cloturees_trend} color="blue" icon="archive" />
+                {!isAgent && <KpiCard label="Approuvées" value={stats.approuvees} trend={stats.approuvees_trend} color="teal" icon="check" />}
+                <KpiCard label="Hommes" value={genreData[0]?.value ?? 0} trend={0} color="blue" icon="users" />
+                <KpiCard label="Femmes" value={genreData[1]?.value ?? 0} trend={0} color="orange" icon="users" />
             </div>
 
             {/* Charts row */}

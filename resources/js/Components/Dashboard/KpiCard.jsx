@@ -4,6 +4,7 @@ const colorMap = {
     teal:   { bg: 'bg-teal-100',   color: 'text-teal-700' },
     red:    { bg: 'bg-red-100',    color: 'text-red-700' },
     blue:   { bg: 'bg-blue-100',   color: 'text-blue-700' },
+    orange: { bg: 'bg-orange-100', color: 'text-orange-700' },
 };
 
 const iconPaths = {
@@ -12,6 +13,7 @@ const iconPaths = {
     check:   '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>',
     x:       '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>',
     archive: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>',
+    users:   '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 100-8 4 4 0 000 8zm6 3a4 4 0 00-3-3.87"/>',
 };
 
 export default function KpiCard({ label, value = 0, trend = 0, color = 'green', icon = 'file' }) {

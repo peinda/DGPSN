@@ -8,13 +8,18 @@ use App\Models\Region;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Response;
 
 class CitoyensController extends Controller
 {
     public function index(Request $request): Response
     {
-        $query = Citoyen::withCount('demandes')
+        $isAgent = Auth::user()->hasRole('agent');
+        $agentId = Auth::id();
+
+        // L'agent ne voit que le nombre de demandes qu'il a lui-même saisies pour chaque citoyen
+        $query = Citoyen::withCount(['demandes' => fn ($q) => $q->when($isAgent, fn ($q) => $q->where('agent_id', $agentId))])
             ->with('commune.departement.region')
             ->orderBy('nom');
 
@@ -34,8 +39,12 @@ class CitoyensController extends Controller
 
     public function show(Citoyen $citoyen): Response
     {
+        $isAgent = Auth::user()->hasRole('agent');
+        $agentId = Auth::id();
+
         $citoyen->load([
             'commune.departement.region',
+            'demandes' => fn ($q) => $q->when($isAgent, fn ($q) => $q->where('agent_id', $agentId)),
             'demandes.typeAide',
             'demandes.evenement',
             'demandes.anneeGestion',

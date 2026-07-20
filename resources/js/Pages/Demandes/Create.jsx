@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout.jsx';
+import Modal from '@/Components/UI/Modal.jsx';
 
 const steps = [
     { id: 1, label: 'Citoyen' },
@@ -52,6 +53,24 @@ function sexeLabel(cin) {
     return cin.startsWith('2') ? 'Féminin' : 'Masculin';
 }
 
+function calculerAge(dateNaissance) {
+    if (!dateNaissance) return null;
+    const naissance = new Date(dateNaissance);
+    if (Number.isNaN(naissance.getTime())) return null;
+    const aujourdhui = new Date();
+    let age = aujourdhui.getFullYear() - naissance.getFullYear();
+    const moisPasse = aujourdhui.getMonth() - naissance.getMonth();
+    if (moisPasse < 0 || (moisPasse === 0 && aujourdhui.getDate() < naissance.getDate())) age--;
+    return age >= 0 ? age : null;
+}
+
+function cycleDepuisAge(age) {
+    if (age === null || age === undefined) return null;
+    if (age <= 35) return 'Jeune';
+    if (age <= 59) return 'Adulte';
+    return 'Vieillard';
+}
+
 function capitaliserPrenom(val) {
     if (!val) return '';
     return val.charAt(0).toUpperCase() + val.slice(1);
@@ -90,24 +109,33 @@ export default function DemandesCreate({
     const [selectedDeptId, setSelectedDeptId] = useState('');
     const [eligibilite, setEligibilite] = useState({ checked: false, quota_atteint: false, periode_active: false, requiert_periode: false });
     const [filesDocuments, setFilesDocuments] = useState([]);
+    const [conflitMessage, setConflitMessage] = useState(null);
 
     const form = useForm({
         citoyen_id: null,
-        cin: '', nom: '', prenom: '', telephone: '', adresse: '', commune_id: '',
+        cin: '', nom: '', prenom: '', telephone: '', date_naissance: '', adresse: '', commune_id: '',
         type_aide_id: '', evenement_id: '', annee_gestion_id: annees[0]?.id ?? '',
         periode_ouverture_id: '',
         prestataires: [],
         pieces_jointes: [],
     });
 
+    useEffect(() => {
+        const message = form.errors.cin_conflit || form.errors.telephone_conflit;
+        if (message) setConflitMessage(message);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [form.errors.cin_conflit, form.errors.telephone_conflit]);
+
     const typeAideCode = typesAide.find((t) => t.id == form.data.type_aide_id)?.code ?? null;
     const documentsRequis = DOCUMENTS_PAR_TYPE[typeAideCode] ?? [
         { label: 'Document justificatif', requis: true },
     ];
+    const sansPrestataire = typeAideCode === 'EVENT_REL';
+    const visibleSteps = sansPrestataire ? steps.filter((s) => s.id !== 3) : steps;
 
     useEffect(() => {
         setFilesDocuments(new Array(documentsRequis.length).fill(null));
-        form.setData('pieces_jointes', []);
+        form.setData((d) => ({ ...d, pieces_jointes: [], ...(sansPrestataire ? { prestataires: [] } : {}) }));
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [typeAideCode]);
 
@@ -139,6 +167,9 @@ export default function DemandesCreate({
 
     const prenomValide = form.data.prenom.length > 0 && /^[A-ZÀÂÄÉÈÊËÏÎÔÖÙÛÜŸÇ]/.test(form.data.prenom);
 
+    const ageCalcule = calculerAge(form.data.date_naissance);
+    const cycleVie = cycleDepuisAge(ageCalcule);
+
     const evenementsFiltres = typesAide.find((t) => t.id == form.data.type_aide_id)?.evenements ?? [];
 
     const departementsDisponibles = regions.find((r) => r.id == selectedRegionId)?.departements ?? [];
@@ -155,7 +186,7 @@ export default function DemandesCreate({
     );
 
     const canProceed = (() => {
-        if (step === 1) return cinValide && (citoyenTrouve || (form.data.nom && form.data.prenom));
+        if (step === 1) return cinValide && (citoyenTrouve || (form.data.nom && form.data.prenom && ageCalcule !== null && telValide(form.data.telephone)));
         if (step === 2) {
             if (!form.data.type_aide_id || !form.data.annee_gestion_id || eligibilite.quota_atteint) return false;
             if (eligibilite.requiert_periode && form.data.evenement_id && eligibilite.checked && !eligibilite.periode_active) return false;
@@ -171,7 +202,8 @@ export default function DemandesCreate({
         setSearching(true);
         try {
             const res = await fetch(route('citoyens.search') + '?cin=' + encodeURIComponent(form.data.cin));
-            const data = await res.json();
+            const raw = await res.json();
+            const data = raw && raw.id ? raw : null;
             setCitoyenTrouve(data);
             if (data) {
                 form.setData((d) => ({ ...d, citoyen_id: data.id, nom: data.nom, prenom: data.prenom }));
@@ -185,7 +217,7 @@ export default function DemandesCreate({
 
     function reinitialiserCitoyen() {
         setCitoyenTrouve(null);
-        form.setData((d) => ({ ...d, citoyen_id: null, nom: '', prenom: '' }));
+        form.setData((d) => ({ ...d, citoyen_id: null, nom: '', prenom: '', date_naissance: '' }));
     }
 
     async function checkEligibilite(overrides = {}) {
@@ -193,12 +225,12 @@ export default function DemandesCreate({
         const annee_gestion_id = overrides.annee_gestion_id ?? form.data.annee_gestion_id;
         const evenement_id = overrides.evenement_id ?? form.data.evenement_id;
         const citoyen_id = form.data.citoyen_id;
-        if (!type_aide_id || !annee_gestion_id || !citoyen_id) return;
+        if (!type_aide_id || !annee_gestion_id) return;
 
         const params = new URLSearchParams({
-            citoyen_id,
             type_aide_id,
             annee_gestion_id,
+            ...(citoyen_id ? { citoyen_id } : {}),
             ...(evenement_id ? { evenement_id } : {}),
         });
 
@@ -209,7 +241,7 @@ export default function DemandesCreate({
 
     function nextStep() {
         if (!canProceed) return;
-        setStep((s) => s + 1);
+        setStep((s) => (s === 2 && sansPrestataire ? 4 : s + 1));
     }
 
     function ajouterPrestataire(p) {
@@ -269,7 +301,7 @@ export default function DemandesCreate({
                 <div className="mb-8">
                     <h1 className="text-xl font-bold text-gray-900 mb-5">Nouvelle demande de prise en charge</h1>
                     <div className="flex items-center gap-0">
-                        {steps.map((s, i) => (
+                        {visibleSteps.map((s, i) => (
                             <div key={s.id} className="flex items-center flex-1 last:flex-none">
                                 <div className="flex flex-col items-center gap-1">
                                     <div className={[
@@ -283,12 +315,12 @@ export default function DemandesCreate({
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7"/>
                                             </svg>
                                         ) : (
-                                            <span>{s.id}</span>
+                                            <span>{i + 1}</span>
                                         )}
                                     </div>
                                     <span className={['text-xs font-medium hidden sm:block', step >= s.id ? 'text-gray-800' : 'text-gray-400'].join(' ')}>{s.label}</span>
                                 </div>
-                                {i < steps.length - 1 && (
+                                {i < visibleSteps.length - 1 && (
                                     <div className={['flex-1 h-0.5 mx-2 mb-5', step > s.id ? 'bg-green-500' : 'bg-gray-200'].join(' ')} />
                                 )}
                             </div>
@@ -344,7 +376,13 @@ export default function DemandesCreate({
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-sm font-semibold text-green-800">{citoyenTrouve.prenom} {citoyenTrouve.nom}</p>
-                                    <p className="text-xs text-green-600">CIN : {citoyenTrouve.cin} — {citoyenTrouve.sexe === 'f' ? 'Féminin' : 'Masculin'} — {citoyenTrouve.commune?.nom ?? 'Localité non renseignée'}</p>
+                                    <p className="text-xs text-green-600">
+                                        CIN : {citoyenTrouve.cin} — {citoyenTrouve.sexe === 'f' ? 'Féminin' : 'Masculin'} — {citoyenTrouve.telephone ?? 'Téléphone non renseigné'}
+                                        {citoyenTrouve.age !== null && citoyenTrouve.age !== undefined && ` — ${citoyenTrouve.age} an${citoyenTrouve.age > 1 ? 's' : ''} (${cycleDepuisAge(citoyenTrouve.age)})`}
+                                    </p>
+                                    <p className="text-xs text-green-600">
+                                        {[citoyenTrouve.commune?.nom, citoyenTrouve.commune?.departement?.nom, citoyenTrouve.commune?.departement?.region?.nom].filter(Boolean).join(', ') || 'Localité non renseignée'}
+                                    </p>
                                 </div>
                                 <button onClick={reinitialiserCitoyen} className="text-xs text-green-700 hover:text-green-900 font-medium">Changer</button>
                             </div>
@@ -384,7 +422,7 @@ export default function DemandesCreate({
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                                        Téléphone
+                                        Téléphone <span className="text-red-500">*</span>
                                         <span className="ml-1 text-xs font-normal text-gray-400">+221 7X XXX XX XX</span>
                                     </label>
                                     <input value={form.data.telephone} onChange={(e) => form.setData('telephone', e.target.value)}
@@ -397,6 +435,23 @@ export default function DemandesCreate({
                                         <p className="mt-1 text-xs text-red-600">{form.errors.telephone}</p>
                                     ) : form.data.telephone && telErreurLocale(form.data.telephone) && (
                                         <p className="mt-1 text-xs text-red-600">{telErreurLocale(form.data.telephone)}</p>
+                                    )}
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Date de naissance <span className="text-red-500">*</span></label>
+                                    <input value={form.data.date_naissance} onChange={(e) => form.setData('date_naissance', e.target.value)}
+                                        type="date" max={new Date().toISOString().slice(0, 10)}
+                                        className={[
+                                            'w-full px-3 py-2.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1B3A2D]/20 focus:border-[#1B3A2D]',
+                                            form.errors.date_naissance ? 'border-red-300 bg-red-50' : (form.data.date_naissance ? 'border-green-400' : 'border-gray-300'),
+                                        ].join(' ')} />
+                                    {form.errors.date_naissance && <p className="mt-1 text-xs text-red-600">{form.errors.date_naissance}</p>}
+                                    {form.data.date_naissance && ageCalcule !== null && (
+                                        <p className="mt-1.5 inline-flex items-center gap-2 text-sm text-gray-500 border border-gray-200 rounded-lg px-3 py-1.5">
+                                            <span><span className="font-bold">Âge</span> : <span className="font-medium text-gray-700">{ageCalcule} an{ageCalcule > 1 ? 's' : ''}</span></span>
+                                            <span className="text-gray-300">|</span>
+                                            <span><span className="font-bold">Cycle</span> : <span className="font-medium text-gray-700">{cycleVie}</span></span>
+                                        </p>
                                     )}
                                 </div>
                                 <div>
@@ -468,6 +523,7 @@ export default function DemandesCreate({
                                     <option value="">— Aucun événement spécifique —</option>
                                     {evenementsFiltres.map((e) => <option key={e.id} value={e.id}>{e.nom}</option>)}
                                 </select>
+                                {form.errors.evenement_id && <p className="mt-1 text-xs text-red-600">{form.errors.evenement_id}</p>}
                             </div>
                         )}
 
@@ -629,10 +685,19 @@ export default function DemandesCreate({
                     )}
                 </div>
 
+                {(form.errors.evenement_id || form.errors.type_aide_id) && (
+                    <div className="mt-4 flex items-start gap-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                        <svg className="w-4 h-4 text-red-500 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd"/>
+                        </svg>
+                        <p className="text-sm text-red-700">{form.errors.evenement_id || form.errors.type_aide_id}</p>
+                    </div>
+                )}
+
                 {/* Navigation */}
                 <div className="flex items-center justify-between mt-6">
                     {step > 1 ? (
-                        <button onClick={() => setStep((s) => s - 1)} type="button"
+                        <button onClick={() => setStep((s) => (s === 4 && sansPrestataire ? 2 : s - 1))} type="button"
                             className="flex items-center gap-2 px-5 py-2.5 text-sm text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"/></svg>
                             Retour
@@ -662,6 +727,16 @@ export default function DemandesCreate({
                     </div>
                 </div>
             </div>
+
+            <Modal show={!!conflitMessage} title="Formulaire non soumis" onClose={() => setConflitMessage(null)}
+                footer={
+                    <button onClick={() => setConflitMessage(null)} type="button"
+                        className="px-4 py-2 text-sm font-medium text-white bg-[#1B3A2D] rounded-lg hover:bg-[#254d3c] transition-colors">
+                        Compris
+                    </button>
+                }>
+                <p className="text-sm text-gray-700">{conflitMessage}</p>
+            </Modal>
         </AppLayout>
     );
 }

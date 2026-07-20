@@ -70,7 +70,7 @@
     <table class="header-table" cellpadding="0" cellspacing="0">
         <tr>
             <td class="header-logo">
-                <img src="{{ public_path('images/logo.png') }}" alt="DGPSN" />
+                <img src="{{ public_path('images/logo-pdf.jpg') }}" alt="DGPSN" />
             </td>
             <td class="header-text">
                 <div class="state">République du Sénégal — Un Peuple, Un But, Une Foi</div>
@@ -101,14 +101,23 @@
                     <td><div class="field"><label>Numéro CIN</label><span>{{ $demande->citoyen->cin }}</span></div></td>
                 </tr>
                 <tr>
+                    <td><div class="field"><label>Sexe</label><span>{{ $demande->citoyen->sexe->label() }}</span></div></td>
                     <td><div class="field"><label>Téléphone</label><span>{{ $demande->citoyen->telephone ?? '—' }}</span></div></td>
-                    <td><div class="field"><label>Localité</label><span>{{ $demande->citoyen->commune?->nom ?? '—' }}</span></div></td>
                 </tr>
-                @if($demande->citoyen->adresse)
                 <tr>
-                    <td colspan="2"><div class="field"><label>Adresse</label><span>{{ $demande->citoyen->adresse }}</span></div></td>
+                    <td><div class="field"><label>Date de naissance</label><span>{{ $demande->citoyen->date_naissance?->format('d/m/Y') ?? '—' }}</span></div></td>
+                    <td><div class="field"><label>Âge / Cycle de vie</label><span>{{ $demande->citoyen->age !== null ? $demande->citoyen->age . ' ans — ' . $demande->citoyen->cycle_vie->label() : '—' }}</span></div></td>
                 </tr>
-                @endif
+                <tr>
+                    <td><div class="field"><label>Région</label><span>{{ $demande->citoyen->commune?->departement?->region?->nom ?? '—' }}</span></div></td>
+                    <td><div class="field"><label>Département</label><span>{{ $demande->citoyen->commune?->departement?->nom ?? '—' }}</span></div></td>
+                </tr>
+                <tr>
+                    <td><div class="field"><label>Commune</label><span>{{ $demande->citoyen->commune?->nom ?? '—' }}</span></div></td>
+                    @if($demande->citoyen->adresse)
+                    <td><div class="field"><label>Adresse</label><span>{{ $demande->citoyen->adresse }}</span></div></td>
+                    @endif
+                </tr>
             </table>
         </div>
     </div>
@@ -126,7 +135,8 @@
         </div>
     </div>
 
-    <!-- Prestataires -->
+    <!-- Prestataires (non applicable aux événements religieux) -->
+    @if($demande->typeAide->code !== 'EVENT_REL')
     <div class="section">
         <div class="section-header">Prestataires agréés</div>
         <table class="prest-table" cellpadding="0" cellspacing="0">
@@ -148,12 +158,19 @@
                 </tr>
                 @endforeach
                 <tr class="total-row">
-                    <td colspan="3">Total</td>
+                    <td colspan="3">Total demandé</td>
                     <td class="amount">{{ number_format($demande->montant_total, 0, ',', ' ') }} FCFA</td>
                 </tr>
+                @if($demande->montant_approuve !== null)
+                <tr class="total-row">
+                    <td colspan="3">Montant approuvé</td>
+                    <td class="amount">{{ number_format($demande->montant_approuve, 0, ',', ' ') }} FCFA</td>
+                </tr>
+                @endif
             </tbody>
         </table>
     </div>
+    @endif
 
     <!-- Texte d'autorisation -->
     <div class="authorization">

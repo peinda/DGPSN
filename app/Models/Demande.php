@@ -27,6 +27,7 @@ class Demande extends Model
         'comite_user_id',
         'statut',
         'montant_total',
+        'montant_approuve',
         'commentaire',
         'date_soumission',
         'date_deliberation',
@@ -36,6 +37,7 @@ class Demande extends Model
     protected $casts = [
         'statut'             => StatutDemande::class,
         'montant_total'      => 'decimal:2',
+        'montant_approuve'   => 'decimal:2',
         'date_soumission'    => 'datetime',
         'date_deliberation'  => 'datetime',
         'date_cloture'       => 'datetime',
@@ -130,12 +132,13 @@ class Demande extends Model
         ]);
     }
 
-    public function approuver(User $membreComite, ?string $commentaire = null): void
+    public function approuver(User $membreComite, ?string $commentaire = null, ?float $montantApprouve = null): void
     {
         $this->update([
             'statut'            => StatutDemande::APPROUVE,
             'comite_user_id'    => $membreComite->id,
             'commentaire'       => $commentaire,
+            'montant_approuve'  => $montantApprouve,
             'date_deliberation' => now(),
         ]);
     }

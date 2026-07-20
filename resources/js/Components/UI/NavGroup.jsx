@@ -32,7 +32,7 @@ export default function NavGroup({ icon, label, open, children }) {
                 <span className="shrink-0 w-5 h-5 flex items-center justify-center">
                     <Icon className="w-5 h-5" />
                 </span>
-                {open && <span className="text-sm truncate flex-1 text-left">{label}</span>}
+                {open && <span className="text-[20px] truncate flex-1 text-left">{label}</span>}
                 {open && (
                     <svg
                         className={['w-4 h-4 shrink-0 transition-transform', expanded ? 'rotate-180' : ''].join(' ')}

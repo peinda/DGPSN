@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\StatutDemande;
+use App\Models\Citoyen;
 use App\Models\Demande;
 use App\Models\TypeAide;
 use Illuminate\Support\Facades\Auth;
@@ -25,30 +26,35 @@ class DashboardController extends Controller
         $debutMoisPrecedent = $now->copy()->subMonth()->startOfMonth();
         $finMoisPrecedent   = $now->copy()->subMonth()->endOfMonth();
 
+        // L'agent ne voit que les statistiques des demandes qu'il a lui-même saisies
+        $isAgent = Auth::user()->hasRole('agent');
+        $agentId = Auth::id();
+        $base    = fn () => Demande::query()->when($isAgent, fn ($q) => $q->where('agent_id', $agentId));
+
         // --- KPI totaux ---
-        $total      = Demande::count();
-        $enAttente  = Demande::whereIn('statut', [StatutDemande::SOUMIS->value, StatutDemande::EN_EXAMEN->value])->count();
-        $approuvees = Demande::where('statut', StatutDemande::APPROUVE->value)->count();
-        $rejetees   = Demande::where('statut', StatutDemande::REJETE->value)->count();
-        $cloturees  = Demande::where('statut', StatutDemande::CLOTURE->value)->count();
+        $total      = $base()->count();
+        $enAttente  = $base()->whereIn('statut', [StatutDemande::SOUMIS->value, StatutDemande::EN_EXAMEN->value])->count();
+        $approuvees = $base()->where('statut', StatutDemande::APPROUVE->value)->count();
+        $rejetees   = $base()->where('statut', StatutDemande::REJETE->value)->count();
+        $cloturees  = $base()->where('statut', StatutDemande::CLOTURE->value)->count();
 
         // --- Trends (vs mois précédent) ---
-        $totalMois    = Demande::where('created_at', '>=', $debutMois)->count();
-        $totalPrecMois= Demande::whereBetween('created_at', [$debutMoisPrecedent, $finMoisPrecedent])->count();
+        $totalMois    = $base()->where('created_at', '>=', $debutMois)->count();
+        $totalPrecMois= $base()->whereBetween('created_at', [$debutMoisPrecedent, $finMoisPrecedent])->count();
 
         // --- Évolution 6 derniers mois ---
-        $evolution = collect(range(5, 0))->map(function ($i) use ($now) {
+        $evolution = collect(range(5, 0))->map(function ($i) use ($now, $base) {
             $mois = $now->copy()->subMonths($i);
             return [
                 'label' => ucfirst($mois->locale('fr')->isoFormat('MMM')),
-                'value' => Demande::whereYear('created_at', $mois->year)
+                'value' => $base()->whereYear('created_at', $mois->year)
                     ->whereMonth('created_at', $mois->month)
                     ->count(),
             ];
         });
 
         // --- Répartition par type d'aide ---
-        $repartition = TypeAide::withCount('demandes')
+        $repartition = TypeAide::withCount(['demandes' => fn ($q) => $q->when($isAgent, fn ($q) => $q->where('agent_id', $agentId))])
             ->having('demandes_count', '>', 0)
             ->orderByDesc('demandes_count')
             ->get()
@@ -58,8 +64,12 @@ class DashboardController extends Controller
                 'color' => self::COULEURS_TYPE[$t->code] ?? '#d1d5db',
             ]);
 
+        // --- Répartition par genre (nombre de demandes, déduit du CIN du citoyen — cf. Citoyen::sexe) ---
+        $demandesHommes = $base()->whereHas('citoyen', fn ($q) => $q->where('cin', 'like', '1%'))->count();
+        $demandesFemmes = $base()->whereHas('citoyen', fn ($q) => $q->where('cin', 'like', '2%'))->count();
+
         // --- Dernières demandes ---
-        $dernieres = Demande::with(['citoyen', 'typeAide'])
+        $dernieres = $base()->with(['citoyen', 'typeAide'])
             ->latest()
             ->limit(5)
             ->get()
@@ -73,7 +83,7 @@ class DashboardController extends Controller
             ]);
 
         // --- Activité récente ---
-        $activite = Demande::with(['citoyen', 'agent', 'comiteUser'])
+        $activite = $base()->with(['citoyen', 'agent', 'comiteUser'])
             ->latest('updated_at')
             ->limit(5)
             ->get()
@@ -126,6 +136,10 @@ class DashboardController extends Controller
                 'values' => $evolution->pluck('value')->toArray(),
             ],
             'repartitionData'   => $repartition,
+            'genreData'         => [
+                ['label' => 'Hommes', 'value' => $demandesHommes, 'color' => '#3b82f6'],
+                ['label' => 'Femmes', 'value' => $demandesFemmes, 'color' => '#F5A623'],
+            ],
             'dernieresDemandes' => $dernieres,
             'activiteRecente'   => $activite,
         ]);

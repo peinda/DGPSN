@@ -10,6 +10,7 @@ use App\Models\Region;
 use App\Models\TypeAide;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Response as InertiaResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -17,10 +18,13 @@ class RapportsController extends Controller
 {
     public function index(Request $request): InertiaResponse
     {
-        $anneeId   = $request->get('annee_gestion_id');
-        $typeId    = $request->get('type_aide_id');
+        $anneeId = $request->get('annee_gestion_id');
+        $typeId  = $request->get('type_aide_id');
+        $isAgent = Auth::user()->hasRole('agent');
+        $agentId = Auth::id();
 
-        $query = Demande::query();
+        // L'agent ne voit que les statistiques de ses propres demandes
+        $query = Demande::query()->when($isAgent, fn ($q) => $q->where('agent_id', $agentId));
         if ($anneeId) $query->where('annee_gestion_id', $anneeId);
         if ($typeId)  $query->where('type_aide_id', $typeId);
 
@@ -33,25 +37,29 @@ class RapportsController extends Controller
         ]);
 
         // Stats par type d'aide
-        $parType = TypeAide::withCount(['demandes' => function ($q) use ($anneeId) {
+        $parType = TypeAide::withCount(['demandes' => function ($q) use ($anneeId, $isAgent, $agentId) {
             if ($anneeId) $q->where('annee_gestion_id', $anneeId);
+            $q->when($isAgent, fn ($q) => $q->where('agent_id', $agentId));
         }])->orderByDesc('demandes_count')->get()->map(fn ($t) => [
             'nom'   => $t->nom,
             'total' => $t->demandes_count,
             'approuvees' => $t->demandes()->where('statut', StatutDemande::APPROUVE->value)
                 ->when($anneeId, fn ($q) => $q->where('annee_gestion_id', $anneeId))
+                ->when($isAgent, fn ($q) => $q->where('agent_id', $agentId))
                 ->count(),
         ]);
 
         // Stats par région
-        $parRegion = Region::with(['departements.communes.citoyens.demandes' => function ($q) use ($anneeId, $typeId) {
+        $parRegion = Region::with(['departements.communes.citoyens.demandes' => function ($q) use ($anneeId, $typeId, $isAgent, $agentId) {
             if ($anneeId) $q->where('annee_gestion_id', $anneeId);
             if ($typeId)  $q->where('type_aide_id', $typeId);
+            $q->when($isAgent, fn ($q) => $q->where('agent_id', $agentId));
         }])->get()->map(fn ($r) => [
             'nom'   => $r->nom,
             'total' => Demande::whereHas('citoyen.commune.departement', fn ($q) => $q->where('region_id', $r->id))
                 ->when($anneeId, fn ($q) => $q->where('annee_gestion_id', $anneeId))
                 ->when($typeId, fn ($q) => $q->where('type_aide_id', $typeId))
+                ->when($isAgent, fn ($q) => $q->where('agent_id', $agentId))
                 ->count(),
         ])->filter(fn ($r) => $r['total'] > 0)->sortByDesc('total')->values();
 

@@ -5,6 +5,7 @@ namespace App\Exports;
 use App\Enums\StatutDemande;
 use App\Models\AnneeGestion;
 use App\Models\Demande;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
@@ -26,7 +27,7 @@ class DemandesExport
 
     public function download(): StreamedResponse
     {
-        $demandes = Demande::with(['citoyen.commune', 'typeAide', 'evenement', 'anneeGestion', 'agent'])
+        $demandes = Demande::with(['citoyen.commune.departement.region', 'typeAide', 'evenement', 'anneeGestion', 'agent'])
             ->when($this->anneeGestionId, fn ($q) => $q->where('annee_gestion_id', $this->anneeGestionId))
             ->when($this->typeAideId,    fn ($q) => $q->where('type_aide_id', $this->typeAideId))
             ->when($this->statut,        fn ($q) => $q->where('statut', $this->statut))
@@ -38,7 +39,7 @@ class DemandesExport
         $sheet->setTitle('Demandes');
 
         // --- Entête document ---
-        $sheet->mergeCells('A1:L1');
+        $sheet->mergeCells('A1:R1');
         $sheet->setCellValue('A1', 'DGPSN — Rapport des Demandes de Prise en Charge Sociale');
         $sheet->getStyle('A1')->applyFromArray([
             'font'      => ['bold' => true, 'size' => 14, 'color' => ['argb' => 'FF' . self::VERT_DGPSN]],
@@ -46,7 +47,7 @@ class DemandesExport
         ]);
         $sheet->getRowDimension(1)->setRowHeight(28);
 
-        $sheet->mergeCells('A2:L2');
+        $sheet->mergeCells('A2:R2');
         $anneeLabel = $this->anneeGestionId
             ? 'Année ' . AnneeGestion::find($this->anneeGestionId)?->annee
             : 'Toutes les années';
@@ -64,20 +65,26 @@ class DemandesExport
             'C' => 'CIN',
             'D' => 'Nom',
             'E' => 'Prénom',
-            'F' => 'Téléphone',
-            'G' => 'Localité',
-            'H' => "Type d'aide",
-            'I' => 'Événement',
-            'J' => 'Statut',
-            'K' => 'Montant (FCFA)',
-            'L' => 'Agent',
+            'F' => 'Sexe',
+            'G' => 'Date de naissance',
+            'H' => 'Âge',
+            'I' => 'Cycle de vie',
+            'J' => 'Téléphone',
+            'K' => 'Région',
+            'L' => 'Département',
+            'M' => 'Commune',
+            'N' => "Type d'aide",
+            'O' => 'Événement',
+            'P' => 'Statut',
+            'Q' => 'Montant (FCFA)',
+            'R' => 'Agent',
         ];
 
         $row = 4;
         foreach ($headers as $col => $label) {
             $sheet->setCellValue("{$col}{$row}", $label);
         }
-        $sheet->getStyle("A{$row}:L{$row}")->applyFromArray([
+        $sheet->getStyle("A{$row}:R{$row}")->applyFromArray([
             'font'      => ['bold' => true, 'color' => ['argb' => 'FFFFFFFF']],
             'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF' . self::VERT_DGPSN]],
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
@@ -85,25 +92,38 @@ class DemandesExport
         ]);
         $sheet->getRowDimension($row)->setRowHeight(20);
 
+        // Colonnes contenant des numéros longs (CIN, téléphone) : forcer le type
+        // texte pour éviter qu'Excel ne les convertisse en notation scientifique.
+        $sheet->getStyle('C:C')->getNumberFormat()->setFormatCode('@');
+        $sheet->getStyle('J:J')->getNumberFormat()->setFormatCode('@');
+
         // --- Données ---
         $row++;
         foreach ($demandes as $i => $d) {
+            $citoyen = $d->citoyen;
+
             $sheet->setCellValue("A{$row}", $d->reference ?? '');
             $sheet->setCellValue("B{$row}", $d->created_at->format('d/m/Y'));
-            $sheet->setCellValue("C{$row}", $d->citoyen?->cin ?? '');
-            $sheet->setCellValue("D{$row}", $d->citoyen?->nom ?? '');
-            $sheet->setCellValue("E{$row}", $d->citoyen?->prenom ?? '');
-            $sheet->setCellValue("F{$row}", $d->citoyen?->telephone ?? '');
-            $sheet->setCellValue("G{$row}", $d->citoyen?->commune?->nom ?? '');
-            $sheet->setCellValue("H{$row}", $d->typeAide?->nom ?? '');
-            $sheet->setCellValue("I{$row}", $d->evenement?->nom ?? '');
-            $sheet->setCellValue("J{$row}", $d->statut->label());
-            $sheet->setCellValue("K{$row}", (float) ($d->montant_total ?? 0));
-            $sheet->setCellValue("L{$row}", $d->agent?->name ?? '');
+            $sheet->setCellValueExplicit("C{$row}", $citoyen?->cin ?? '', DataType::TYPE_STRING);
+            $sheet->setCellValue("D{$row}", $citoyen?->nom ?? '');
+            $sheet->setCellValue("E{$row}", $citoyen?->prenom ?? '');
+            $sheet->setCellValue("F{$row}", $citoyen?->sexe?->label() ?? '');
+            $sheet->setCellValue("G{$row}", $citoyen?->date_naissance?->format('d/m/Y') ?? '');
+            $sheet->setCellValue("H{$row}", $citoyen?->age ?? '');
+            $sheet->setCellValue("I{$row}", $citoyen?->cycle_vie?->label() ?? '');
+            $sheet->setCellValueExplicit("J{$row}", $citoyen?->telephone ?? '', DataType::TYPE_STRING);
+            $sheet->setCellValue("K{$row}", $citoyen?->commune?->departement?->region?->nom ?? '');
+            $sheet->setCellValue("L{$row}", $citoyen?->commune?->departement?->nom ?? '');
+            $sheet->setCellValue("M{$row}", $citoyen?->commune?->nom ?? '');
+            $sheet->setCellValue("N{$row}", $d->typeAide?->nom ?? '');
+            $sheet->setCellValue("O{$row}", $d->evenement?->nom ?? '');
+            $sheet->setCellValue("P{$row}", $d->statut->label());
+            $sheet->setCellValue("Q{$row}", (float) ($d->montant_total ?? 0));
+            $sheet->setCellValue("R{$row}", $d->agent?->name ?? '');
 
-            // Alternance couleurs + couleur statut colonne J
+            // Alternance couleurs + couleur statut colonne P
             $bg = $i % 2 === 0 ? 'FFFFFFFF' : 'FFF9FAFB';
-            $sheet->getStyle("A{$row}:L{$row}")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB($bg);
+            $sheet->getStyle("A{$row}:R{$row}")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB($bg);
 
             $statutColor = match ($d->statut) {
                 StatutDemande::APPROUVE => 'FF16a34a',
@@ -112,30 +132,33 @@ class DemandesExport
                 StatutDemande::EN_EXAMEN => 'FF3b82f6',
                 default                  => 'FF6b7280',
             };
-            $sheet->getStyle("J{$row}")->getFont()->setColor(new Color($statutColor))->setBold(true);
-            $sheet->getStyle("K{$row}")->getNumberFormat()->setFormatCode('#,##0');
+            $sheet->getStyle("P{$row}")->getFont()->setColor(new Color($statutColor))->setBold(true);
+            $sheet->getStyle("Q{$row}")->getNumberFormat()->setFormatCode('#,##0');
 
             $row++;
         }
 
         // --- Total ---
-        $sheet->mergeCells("A{$row}:J{$row}");
+        $sheet->mergeCells("A{$row}:P{$row}");
         $sheet->setCellValue("A{$row}", 'TOTAL — ' . $demandes->count() . ' demande(s)');
-        $sheet->setCellValue("K{$row}", $demandes->sum('montant_total'));
-        $sheet->getStyle("A{$row}:L{$row}")->applyFromArray([
+        $sheet->setCellValue("Q{$row}", $demandes->sum('montant_total'));
+        $sheet->getStyle("A{$row}:R{$row}")->applyFromArray([
             'font' => ['bold' => true],
             'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FFEFF6FF']],
         ]);
-        $sheet->getStyle("K{$row}")->getNumberFormat()->setFormatCode('#,##0');
+        $sheet->getStyle("Q{$row}")->getNumberFormat()->setFormatCode('#,##0');
 
         // --- Largeurs colonnes ---
-        foreach (['A' => 16, 'B' => 11, 'C' => 16, 'D' => 18, 'E' => 18, 'F' => 14, 'G' => 16, 'H' => 22, 'I' => 18, 'J' => 14, 'K' => 16, 'L' => 20] as $col => $width) {
+        foreach ([
+            'A' => 16, 'B' => 11, 'C' => 16, 'D' => 18, 'E' => 18, 'F' => 10, 'G' => 15, 'H' => 8,
+            'I' => 13, 'J' => 15, 'K' => 16, 'L' => 16, 'M' => 16, 'N' => 22, 'O' => 18, 'P' => 14, 'Q' => 16, 'R' => 20,
+        ] as $col => $width) {
             $sheet->getColumnDimension($col)->setWidth($width);
         }
 
         // --- Bordures tableau ---
         $lastDataRow = $row;
-        $sheet->getStyle("A4:L{$lastDataRow}")->getBorders()->getAllBorders()
+        $sheet->getStyle("A4:R{$lastDataRow}")->getBorders()->getAllBorders()
             ->setBorderStyle(Border::BORDER_THIN)->getColor()->setARGB('FFD1D5DB');
 
         // --- Réponse ---

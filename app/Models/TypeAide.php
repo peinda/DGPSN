@@ -16,6 +16,13 @@ class TypeAide extends Model
 
     protected $casts = ['actif' => 'boolean', 'requiert_periode' => 'boolean'];
 
+    private const CODES_MEDICAUX = ['ASSIST_MED', 'HOSP'];
+
+    public function estMedical(): bool
+    {
+        return in_array($this->code, self::CODES_MEDICAUX, true);
+    }
+
     public function evenements(): HasMany
     {
         return $this->hasMany(Evenement::class);

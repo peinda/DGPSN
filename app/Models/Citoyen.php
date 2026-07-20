@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\CycleVie;
 use App\Enums\Sexe;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -13,9 +14,13 @@ class Citoyen extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['cin', 'nom', 'prenom', 'telephone', 'adresse', 'commune_id'];
+    protected $fillable = ['cin', 'nom', 'prenom', 'telephone', 'date_naissance', 'adresse', 'commune_id'];
 
-    protected $appends = ['sexe'];
+    protected $casts = [
+        'date_naissance' => 'date',
+    ];
+
+    protected $appends = ['sexe', 'age', 'cycle_vie'];
 
     /**
      * Déduit du premier chiffre du CIN sénégalais : 1 = masculin, 2 = féminin.
@@ -24,6 +29,20 @@ class Citoyen extends Model
     {
         return Attribute::make(
             get: fn () => str_starts_with($this->cin, '2') ? Sexe::FEMININ : Sexe::MASCULIN,
+        );
+    }
+
+    protected function age(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->date_naissance ? (int) $this->date_naissance->diffInYears(now()) : null,
+        );
+    }
+
+    protected function cycleVie(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->age === null ? null : CycleVie::depuisAge($this->age),
         );
     }
 

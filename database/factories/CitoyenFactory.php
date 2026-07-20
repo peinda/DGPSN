@@ -20,6 +20,7 @@ class CitoyenFactory extends Factory
             'prenom'     => fake()->firstName(),
             'telephone'  => fake()->randomElement(['70', '71', '75', '76', '77', '78'])
                 . fake()->numerify('#######'),
+            'date_naissance' => fake()->dateTimeBetween('-85 years', '-18 years'),
             'adresse'    => fake()->address(),
             'commune_id' => null,
         ];

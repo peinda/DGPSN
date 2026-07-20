@@ -21,7 +21,7 @@ class DemandesController extends Controller
 {
     public function index(Request $request): Response
     {
-        $query = Demande::with(['citoyen', 'typeAide', 'evenement', 'anneeGestion', 'agent'])
+        $query = Demande::with(['citoyen.commune', 'typeAide', 'evenement', 'anneeGestion', 'agent'])
             ->latest();
 
         if ($search = $request->get('search')) {
@@ -74,13 +74,23 @@ class DemandesController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        // Normalise les chaînes vides en null pour que `required_without` (côté citoyen déjà
+        // trouvé) et `nullable` s'accordent correctement — sinon Laravel valide quand même
+        // les règles de type (string/date/regex) contre une chaîne vide et les rejette.
+        foreach (['cin', 'nom', 'prenom', 'telephone', 'date_naissance'] as $champ) {
+            if ($request->input($champ) === '') {
+                $request->merge([$champ => null]);
+            }
+        }
+
         $data = $request->validate([
             // Citoyen
             'citoyen_id'          => 'nullable|exists:citoyens,id',
-            'cin'                 => ['required_without:citoyen_id', 'string', 'min:12', 'max:14', 'regex:/^[12]/'],
-            'nom'                 => ['required_without:citoyen_id', 'string', 'max:255', 'regex:/^[A-ZÀÂÄÉÈÊËÏÎÔÖÙÛÜŸÇ][A-ZÀÂÄÉÈÊËÏÎÔÖÙÛÜŸÇ\s\-\']*$/'],
-            'prenom'              => ['required_without:citoyen_id', 'string', 'max:255', 'regex:/^[A-ZÀÂÄÉÈÊËÏÎÔÖÙÛÜŸÇ]/'],
-            'telephone'           => ['nullable', 'string', 'regex:/^\+221(70|71|75|76|77|78)[0-9]{7}$/'],
+            'cin'                 => ['nullable', 'required_without:citoyen_id', 'string', 'min:12', 'max:14', 'regex:/^[12]/'],
+            'nom'                 => ['nullable', 'required_without:citoyen_id', 'string', 'max:255', 'regex:/^[A-ZÀÂÄÉÈÊËÏÎÔÖÙÛÜŸÇ][A-ZÀÂÄÉÈÊËÏÎÔÖÙÛÜŸÇ\s\-\']*$/'],
+            'prenom'              => ['nullable', 'required_without:citoyen_id', 'string', 'max:255', 'regex:/^[A-ZÀÂÄÉÈÊËÏÎÔÖÙÛÜŸÇ]/'],
+            'telephone'           => ['nullable', 'required_without:citoyen_id', 'string', 'regex:/^\+221(70|71|75|76|77|78)[0-9]{7}$/'],
+            'date_naissance'      => ['nullable', 'required_without:citoyen_id', 'date', 'before:today'],
             'adresse'             => 'nullable|string|max:500',
             'commune_id'          => 'nullable|exists:communes,id',
             // Demande
@@ -102,24 +112,40 @@ class DemandesController extends Controller
             'telephone.regex'        => 'Format attendu : +221 suivi de 70, 71, 75, 76, 77 ou 78 et 7 chiffres.',
             'nom.regex'              => 'Le nom doit être entièrement en majuscules.',
             'prenom.regex'           => 'Le prénom doit commencer par une majuscule.',
+            'date_naissance.before'  => 'La date de naissance doit être antérieure à aujourd\'hui.',
             'pieces_jointes.*.mimes' => 'Formats acceptés : PDF, JPG, PNG.',
             'pieces_jointes.*.max'   => 'Taille maximale par fichier : 100 Mo.',
         ]);
+
+        if (empty($data['citoyen_id'])) {
+            $conflitCin = Citoyen::where('cin', $data['cin'])->first();
+            if ($conflitCin) {
+                return back()->withErrors([
+                    'cin_conflit' => "Le numéro de carte d'identité appartient déjà à un citoyen enregistré ({$conflitCin->prenom} {$conflitCin->nom}). Vérifiez le CIN saisi.",
+                ]);
+            }
+
+            $conflitTelephone = Citoyen::where('telephone', $data['telephone'])->first();
+            if ($conflitTelephone) {
+                return back()->withErrors([
+                    'telephone_conflit' => "Ce numéro de téléphone appartient déjà à un citoyen enregistré ({$conflitTelephone->prenom} {$conflitTelephone->nom}). Vérifiez le numéro saisi.",
+                ]);
+            }
+        }
 
         return DB::transaction(function () use ($data, $request) {
             // Résoudre ou créer le citoyen
             $citoyen = isset($data['citoyen_id']) && $data['citoyen_id']
                 ? Citoyen::findOrFail($data['citoyen_id'])
-                : Citoyen::firstOrCreate(
-                    ['cin' => $data['cin']],
-                    [
-                        'nom'        => $data['nom'],
-                        'prenom'     => $data['prenom'],
-                        'telephone'  => $data['telephone']  ?? null,
-                        'adresse'    => $data['adresse']    ?? null,
-                        'commune_id' => $data['commune_id'] ?? null,
-                    ]
-                );
+                : Citoyen::create([
+                    'cin'            => $data['cin'],
+                    'nom'            => $data['nom'],
+                    'prenom'         => $data['prenom'],
+                    'telephone'      => $data['telephone'],
+                    'date_naissance' => $data['date_naissance'] ?? null,
+                    'adresse'        => $data['adresse']        ?? null,
+                    'commune_id'     => $data['commune_id']     ?? null,
+                ]);
 
             // Règle 1 — Quota
             if (Demande::quotaAtteint($citoyen->id, $data['type_aide_id'], $data['annee_gestion_id'])) {
@@ -198,8 +224,17 @@ class DemandesController extends Controller
         });
     }
 
+    private function assurerProprietaireAgent(Demande $demande): void
+    {
+        if (Auth::user()->hasRole('agent') && $demande->agent_id !== Auth::id()) {
+            abort(403, "Vous n'avez accès qu'aux demandes que vous avez enregistrées.");
+        }
+    }
+
     public function show(Demande $demande): Response
     {
+        $this->assurerProprietaireAgent($demande);
+
         $demande->load([
             'citoyen.commune.departement.region',
             'typeAide',
@@ -221,6 +256,8 @@ class DemandesController extends Controller
 
     public function destroy(Demande $demande): RedirectResponse
     {
+        $this->assurerProprietaireAgent($demande);
+
         if ($demande->statut !== StatutDemande::BROUILLON) {
             return back()->with('error', 'Seules les demandes en brouillon peuvent être supprimées.');
         }
@@ -232,6 +269,8 @@ class DemandesController extends Controller
 
     public function soumettre(Demande $demande): RedirectResponse
     {
+        $this->assurerProprietaireAgent($demande);
+
         if ($demande->statut !== StatutDemande::BROUILLON) {
             return back()->with('error', 'Cette demande ne peut pas être soumise.');
         }
@@ -257,6 +296,8 @@ class DemandesController extends Controller
 
     public function edit(Demande $demande): Response|RedirectResponse
     {
+        $this->assurerProprietaireAgent($demande);
+
         if ($demande->statut !== StatutDemande::BROUILLON) {
             return redirect()->route('demandes.show', $demande)
                 ->with('error', 'Seules les demandes en brouillon peuvent être modifiées.');
@@ -275,6 +316,8 @@ class DemandesController extends Controller
 
     public function update(Request $request, Demande $demande): RedirectResponse
     {
+        $this->assurerProprietaireAgent($demande);
+
         if ($demande->statut !== StatutDemande::BROUILLON) {
             return back()->with('error', 'Seules les demandes en brouillon peuvent être modifiées.');
         }
@@ -314,6 +357,8 @@ class DemandesController extends Controller
 
     public function confirmerPrestataire(Demande $demande, Prestataire $prestataire): RedirectResponse
     {
+        $this->assurerProprietaireAgent($demande);
+
         if ($demande->statut !== StatutDemande::APPROUVE) {
             return back()->with('error', 'La demande doit être approuvée pour confirmer une prestation.');
         }
@@ -334,6 +379,8 @@ class DemandesController extends Controller
 
     public function cloturer(Demande $demande): RedirectResponse
     {
+        $this->assurerProprietaireAgent($demande);
+
         if ($demande->statut !== StatutDemande::APPROUVE) {
             return back()->with('error', 'Seules les demandes approuvées peuvent être clôturées.');
         }

@@ -131,9 +131,9 @@ Route::middleware('auth')->group(function () {
     // --- Rapports ---
     Route::middleware('permission:rapports.voir')->prefix('rapports')->name('rapports.')->group(function () {
         Route::get('/tableau-de-bord', [RapportsController::class, 'index'])->name('index');
-        Route::get('/exports',         [RapportsController::class, 'exports'])->name('exports');
     });
     Route::middleware('permission:rapports.exporter')->prefix('rapports')->name('rapports.')->group(function () {
+        Route::get('/exports',      [RapportsController::class, 'exports'])->name('exports');
         Route::get('/export-csv',   [RapportsController::class, 'exportCsv'])->name('export-csv');
         Route::get('/export-excel', [RapportsController::class, 'exportExcel'])->name('export-excel');
     });

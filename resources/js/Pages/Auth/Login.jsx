@@ -104,17 +104,17 @@ export default function Login() {
                     <form onSubmit={submit} className="space-y-4">
                         {/* Email */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                                Adresse email
+                            <label className="block text-[20px] font-medium text-gray-700 mb-1.5">
+                                User
                             </label>
                             <input
                                 value={data.email}
                                 onChange={(e) => setData('email', e.target.value)}
                                 type="email"
                                 autoComplete="email"
-                                placeholder="exemple@dgpsn.sn"
+                                placeholder="user"
                                 className={[
-                                    'w-full px-4 py-2.5 text-sm rounded-lg border transition-colors focus:outline-none focus:ring-2 focus:ring-[#1B3A2D]/20 focus:border-[#1B3A2D]',
+                                    'w-full px-4 py-2.5 text-[20px] rounded-lg border transition-colors focus:outline-none focus:ring-2 focus:ring-[#1B3A2D]/20 focus:border-[#1B3A2D]',
                                     errors.email
                                         ? 'border-red-300 bg-red-50'
                                         : 'border-gray-300 bg-white hover:border-gray-400',
@@ -124,7 +124,7 @@ export default function Login() {
 
                         {/* Mot de passe */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                            <label className="block text-[20px] font-medium text-gray-700 mb-1.5">
                                 Mot de passe
                             </label>
                             <div className="relative">
@@ -135,7 +135,7 @@ export default function Login() {
                                     autoComplete="current-password"
                                     placeholder="••••••••"
                                     className={[
-                                        'w-full px-4 py-2.5 pr-10 text-sm rounded-lg border transition-colors focus:outline-none focus:ring-2 focus:ring-[#1B3A2D]/20 focus:border-[#1B3A2D]',
+                                        'w-full px-4 py-2.5 pr-10 text-[20px] rounded-lg border transition-colors focus:outline-none focus:ring-2 focus:ring-[#1B3A2D]/20 focus:border-[#1B3A2D]',
                                         errors.password
                                             ? 'border-red-300 bg-red-50'
                                             : 'border-gray-300 bg-white hover:border-gray-400',
@@ -158,7 +158,7 @@ export default function Login() {
                                     )}
                                 </button>
                             </div>
-                            {errors.password && <p className="mt-1 text-xs text-red-600">{errors.password}</p>}
+                            {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
                         </div>
 
                         {/* Se souvenir + mot de passe oublié */}
@@ -171,9 +171,9 @@ export default function Login() {
                                     type="checkbox"
                                     className="w-4 h-4 rounded border-gray-300 text-[#1B3A2D] focus:ring-[#1B3A2D]"
                                 />
-                                <label htmlFor="remember" className="ml-2 text-sm text-gray-600">Se souvenir de moi</label>
+                                <label htmlFor="remember" className="ml-2 text-[20px] text-gray-600">Se souvenir de moi</label>
                             </div>
-                            <Link href={route('password.request')} className="text-sm text-[#1B3A2D] hover:underline">
+                            <Link href={route('password.request')} className="text-[20px] text-[#1B3A2D] hover:underline">
                                 Mot de passe oublié ?
                             </Link>
                         </div>
@@ -182,7 +182,7 @@ export default function Login() {
                         <button
                             type="submit"
                             disabled={processing}
-                            className="w-full bg-[#1B3A2D] hover:bg-[#254d3c] text-white font-medium py-2.5 px-4 rounded-lg transition-all duration-150 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                            className="w-full bg-[#1B3A2D] hover:bg-[#254d3c] text-white text-[20px] font-medium py-2.5 px-4 rounded-lg transition-all duration-150 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
                         >
                             {processing && (
                                 <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">

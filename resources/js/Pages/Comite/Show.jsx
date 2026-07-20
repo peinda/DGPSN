@@ -7,6 +7,7 @@ import Modal from '@/Components/UI/Modal.jsx';
 
 function formatDate(d) { return d ? new Date(d).toLocaleDateString('fr-FR') : '—'; }
 function formatMontant(n) { return n ? new Intl.NumberFormat('fr-FR').format(n) : '0'; }
+function cycleLabel(c) { return { jeune: 'Jeune', adulte: 'Adulte', vieillard: 'Vieillard' }[c] ?? c ?? '—'; }
 function formatBytes(b) { const k = b / 1024; return k >= 1024 ? (k / 1024).toFixed(1) + ' Mo' : Math.round(k) + ' Ko'; }
 
 export default function ComiteShow({ demande }) {
@@ -14,7 +15,8 @@ export default function ComiteShow({ demande }) {
     const [showRejetModal, setShowRejetModal] = useState(false);
 
     const examinerForm = useForm({});
-    const approuverForm = useForm({ commentaire: '' });
+    const estMedical = ['ASSIST_MED', 'HOSP'].includes(demande.type_aide?.code);
+    const approuverForm = useForm({ commentaire: '', montant_approuve: demande.montant_total ?? '' });
     const rejetForm = useForm({ commentaire: '' });
 
     const annee = demande.annee_gestion?.annee;
@@ -107,7 +109,12 @@ export default function ComiteShow({ demande }) {
                                 <div><dt className="text-xs text-gray-400">CIN</dt><dd className="font-mono text-gray-700">{demande.citoyen?.cin}</dd></div>
                                 <div><dt className="text-xs text-gray-400">Sexe</dt><dd className="text-gray-700">{demande.citoyen?.sexe === 'f' ? 'Féminin' : 'Masculin'}</dd></div>
                                 <div><dt className="text-xs text-gray-400">Téléphone</dt><dd className="text-gray-700">{demande.citoyen?.telephone ?? '—'}</dd></div>
-                                <div><dt className="text-xs text-gray-400">Localité</dt><dd className="text-gray-700">{demande.citoyen?.commune?.nom ?? '—'}</dd></div>
+                                <div><dt className="text-xs text-gray-400">Date de naissance</dt><dd className="text-gray-700">{formatDate(demande.citoyen?.date_naissance)}</dd></div>
+                                <div><dt className="text-xs text-gray-400">Âge / Cycle de vie</dt><dd className="text-gray-700">{demande.citoyen?.age != null ? `${demande.citoyen.age} ans — ${cycleLabel(demande.citoyen.cycle_vie)}` : '—'}</dd></div>
+                                <div><dt className="text-xs text-gray-400">Commune</dt><dd className="text-gray-700">{demande.citoyen?.commune?.nom ?? '—'}</dd></div>
+                                <div><dt className="text-xs text-gray-400">Département</dt><dd className="text-gray-700">{demande.citoyen?.commune?.departement?.nom ?? '—'}</dd></div>
+                                <div><dt className="text-xs text-gray-400">Région</dt><dd className="text-gray-700">{demande.citoyen?.commune?.departement?.region?.nom ?? '—'}</dd></div>
+                                <div><dt className="text-xs text-gray-400">Adresse</dt><dd className="text-gray-700">{demande.citoyen?.adresse ?? '—'}</dd></div>
                             </dl>
 
                             {autresDemandes.length > 0 && (
@@ -176,27 +183,35 @@ export default function ComiteShow({ demande }) {
                             </dl>
                         </div>
 
-                        {/* Prestataires */}
-                        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
-                            <h2 className="text-sm font-semibold text-gray-700 mb-4">Prestataires</h2>
-                            {demande.prestataires?.length ? (
-                                <div className="space-y-2">
-                                    {demande.prestataires.map((p) => (
-                                        <div key={p.id} className="p-3 bg-gray-50 rounded-lg">
-                                            <p className="text-sm font-medium text-gray-900">{p.nom}</p>
-                                            <p className="text-xs text-gray-400 mt-0.5">{p.commune?.nom ?? '—'}</p>
-                                            <p className="text-sm font-bold text-gray-800 mt-1">{formatMontant(p.pivot?.montant_estime)} FCFA</p>
+                        {/* Prestataires (non applicable aux événements religieux) */}
+                        {demande.type_aide?.code !== 'EVENT_REL' && (
+                            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+                                <h2 className="text-sm font-semibold text-gray-700 mb-4">Prestataires</h2>
+                                {demande.prestataires?.length ? (
+                                    <div className="space-y-2">
+                                        {demande.prestataires.map((p) => (
+                                            <div key={p.id} className="p-3 bg-gray-50 rounded-lg">
+                                                <p className="text-sm font-medium text-gray-900">{p.nom}</p>
+                                                <p className="text-xs text-gray-400 mt-0.5">{p.commune?.nom ?? '—'}</p>
+                                                <p className="text-sm font-bold text-gray-800 mt-1">{formatMontant(p.pivot?.montant_estime)} FCFA</p>
+                                            </div>
+                                        ))}
+                                        <div className="pt-2 border-t border-gray-100 flex justify-between text-sm font-bold text-gray-900">
+                                            <span>Total demandé</span>
+                                            <span>{formatMontant(demande.montant_total)} FCFA</span>
                                         </div>
-                                    ))}
-                                    <div className="pt-2 border-t border-gray-100 flex justify-between text-sm font-bold text-gray-900">
-                                        <span>Total</span>
-                                        <span>{formatMontant(demande.montant_total)} FCFA</span>
+                                        {demande.statut === 'approuve' && demande.montant_approuve !== null && (
+                                            <div className="flex justify-between text-sm font-bold text-green-700">
+                                                <span>Montant approuvé</span>
+                                                <span>{formatMontant(demande.montant_approuve)} FCFA</span>
+                                            </div>
+                                        )}
                                     </div>
-                                </div>
-                            ) : (
-                                <p className="text-sm text-gray-400">Aucun prestataire.</p>
-                            )}
-                        </div>
+                                ) : (
+                                    <p className="text-sm text-gray-400">Aucun prestataire.</p>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
@@ -206,7 +221,8 @@ export default function ComiteShow({ demande }) {
                 footer={
                     <>
                         <button onClick={() => setShowApprouverModal(false)} className="px-4 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">Annuler</button>
-                        <button onClick={approuver} disabled={approuverForm.processing}
+                        <button onClick={approuver}
+                            disabled={approuverForm.processing || (estMedical && approuverForm.data.montant_approuve === '')}
                             className="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg disabled:opacity-60">
                             {approuverForm.processing ? 'Approbation...' : "Confirmer l'approbation"}
                         </button>
@@ -217,6 +233,33 @@ export default function ComiteShow({ demande }) {
                     <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
                         <p className="text-sm text-green-800">Vous êtes sur le point d'approuver la demande <strong>{demande.reference}</strong>. Un bon PDF sera généré automatiquement.</p>
                     </div>
+
+                    {estMedical && (
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                                Montant approuvé (FCFA) <span className="text-red-500">*</span>
+                                <span className="ml-1 text-xs font-normal text-gray-400">
+                                    selon le budget disponible, dans la limite de la somme demandée
+                                </span>
+                            </label>
+                            <input
+                                value={approuverForm.data.montant_approuve}
+                                onChange={(e) => approuverForm.setData('montant_approuve', e.target.value)}
+                                type="number" min="0" max={demande.montant_total ?? undefined} step="1"
+                                placeholder="0"
+                                className={[
+                                    'w-full px-3 py-2.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500',
+                                    approuverForm.errors.montant_approuve ? 'border-red-300 bg-red-50' : 'border-gray-300',
+                                ].join(' ')} />
+                            <p className="mt-1 text-xs text-gray-500">
+                                Somme demandée par le citoyen : <span className="font-semibold text-gray-700">{formatMontant(demande.montant_total)} FCFA</span>
+                            </p>
+                            {approuverForm.errors.montant_approuve && (
+                                <p className="mt-1 text-xs text-red-600">{approuverForm.errors.montant_approuve}</p>
+                            )}
+                        </div>
+                    )}
+
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1.5">Commentaire (optionnel)</label>
                         <textarea value={approuverForm.data.commentaire} onChange={(e) => approuverForm.setData('commentaire', e.target.value)} rows={3} placeholder="Observation du comité..."

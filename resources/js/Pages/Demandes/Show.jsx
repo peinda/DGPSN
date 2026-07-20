@@ -6,6 +6,7 @@ import StatusBadge from '@/Components/UI/StatusBadge.jsx';
 import Modal from '@/Components/UI/Modal.jsx';
 
 function formatDate(d) { return d ? new Date(d).toLocaleDateString('fr-FR') : '—'; }
+function cycleLabel(c) { return { jeune: 'Jeune', adulte: 'Adulte', vieillard: 'Vieillard' }[c] ?? c ?? '—'; }
 function formatMontant(n) { return n ? new Intl.NumberFormat('fr-FR').format(n) : '0'; }
 function formatBytes(b) { const k = b / 1024; return k >= 1024 ? (k / 1024).toFixed(1) + ' Mo' : Math.round(k) + ' Ko'; }
 
@@ -120,7 +121,12 @@ export default function DemandesShow({ demande }) {
                                 <div><dt className="text-gray-500 text-xs">CIN</dt><dd className="font-mono text-gray-700">{demande.citoyen?.cin}</dd></div>
                                 <div><dt className="text-gray-500 text-xs">Sexe</dt><dd className="text-gray-700">{demande.citoyen?.sexe === 'f' ? 'Féminin' : 'Masculin'}</dd></div>
                                 <div><dt className="text-gray-500 text-xs">Téléphone</dt><dd className="text-gray-700">{demande.citoyen?.telephone ?? '—'}</dd></div>
-                                <div><dt className="text-gray-500 text-xs">Localité</dt><dd className="text-gray-700">{demande.citoyen?.commune?.nom ?? '—'}</dd></div>
+                                <div><dt className="text-gray-500 text-xs">Date de naissance</dt><dd className="text-gray-700">{formatDate(demande.citoyen?.date_naissance)}</dd></div>
+                                <div><dt className="text-gray-500 text-xs">Âge / Cycle de vie</dt><dd className="text-gray-700">{demande.citoyen?.age != null ? `${demande.citoyen.age} ans — ${cycleLabel(demande.citoyen.cycle_vie)}` : '—'}</dd></div>
+                                <div><dt className="text-gray-500 text-xs">Commune</dt><dd className="text-gray-700">{demande.citoyen?.commune?.nom ?? '—'}</dd></div>
+                                <div><dt className="text-gray-500 text-xs">Département</dt><dd className="text-gray-700">{demande.citoyen?.commune?.departement?.nom ?? '—'}</dd></div>
+                                <div><dt className="text-gray-500 text-xs">Région</dt><dd className="text-gray-700">{demande.citoyen?.commune?.departement?.region?.nom ?? '—'}</dd></div>
+                                <div><dt className="text-gray-500 text-xs">Adresse</dt><dd className="text-gray-700">{demande.citoyen?.adresse ?? '—'}</dd></div>
                             </dl>
                             {demande.citoyen?.demandes?.length > 1 && (
                                 <div className="mt-4 pt-4 border-t border-gray-100">

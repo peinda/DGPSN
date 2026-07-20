@@ -132,7 +132,7 @@ export default function DemandesIndex({
                                 <td className="px-5 py-3 font-mono text-xs text-gray-700">{d.reference ?? '—'}</td>
                                 <td className="px-4 py-3">
                                     <p className="font-medium text-gray-900 text-xs">{d.citoyen?.prenom} {d.citoyen?.nom}</p>
-                                    <p className="text-gray-400 text-xs">{d.citoyen?.cin}</p>
+                                    <p className="text-gray-400 text-xs">{d.citoyen?.cin} — {d.citoyen?.commune?.nom ?? 'Localité non renseignée'}</p>
                                 </td>
                                 <td className="px-4 py-3 text-gray-700">{d.type_aide?.nom}</td>
                                 <td className="px-4 py-3 text-gray-500 text-xs">{d.evenement?.nom ?? '—'}</td>

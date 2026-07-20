@@ -17,12 +17,12 @@ class ComiteController extends Controller
 {
     public function index(Request $request): InertiaResponse
     {
-        $enAttente = Demande::with(['citoyen', 'typeAide', 'evenement', 'anneeGestion', 'agent'])
+        $enAttente = Demande::with(['citoyen.commune', 'typeAide', 'evenement', 'anneeGestion', 'agent'])
             ->whereIn('statut', [StatutDemande::SOUMIS->value, StatutDemande::EN_EXAMEN->value])
             ->orderBy('date_soumission')
             ->get();
 
-        $traitees = Demande::with(['citoyen', 'typeAide', 'comiteUser'])
+        $traitees = Demande::with(['citoyen.commune', 'typeAide', 'comiteUser'])
             ->whereIn('statut', [StatutDemande::APPROUVE->value, StatutDemande::REJETE->value])
             ->orderByDesc('date_deliberation')
             ->limit(20)
@@ -72,11 +72,23 @@ class ComiteController extends Controller
             return back()->with('error', 'Cette demande ne peut pas être approuvée.');
         }
 
-        $request->validate([
-            'commentaire' => 'nullable|string|max:1000',
+        $demande->loadMissing('typeAide');
+        $estMedical = $demande->typeAide?->estMedical() ?? false;
+
+        $data = $request->validate([
+            'commentaire'      => 'nullable|string|max:1000',
+            'montant_approuve' => [
+                $estMedical ? 'required' : 'nullable',
+                'numeric',
+                'min:0',
+                'max:' . ($demande->montant_total ?? 0),
+            ],
+        ], [
+            'montant_approuve.required' => "Le montant approuvé est obligatoire pour une prise en charge médicale.",
+            'montant_approuve.max'      => 'Le montant approuvé ne peut pas dépasser la somme demandée (' . number_format((float) $demande->montant_total, 0, ',', ' ') . ' FCFA).',
         ]);
 
-        $demande->approuver(Auth::user(), $request->get('commentaire'));
+        $demande->approuver(Auth::user(), $data['commentaire'] ?? null, $estMedical ? (float) $data['montant_approuve'] : null);
 
         AuditService::demande('demande.approuvee', $demande, "Demande {$demande->reference} approuvée par " . Auth::user()->name);
 

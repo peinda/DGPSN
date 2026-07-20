@@ -42,14 +42,14 @@ export default function NavItem({ href, label, icon, active, open, sub = false }
             {sub && open && (
                 <span className={['w-1 h-1 rounded-full shrink-0', active ? 'bg-[#F5A623]' : 'bg-white/30'].join(' ')} />
             )}
-            {open && <span className="text-sm truncate">{label}</span>}
+            {open && <span className="text-[20px] truncate">{label}</span>}
 
             {active && (
                 <span className="absolute right-0 top-1/2 -translate-y-1/2 w-0.5 h-6 bg-[#F5A623] rounded-l" />
             )}
 
             {!open && (
-                <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-50">
+                <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-[20px] rounded whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-50">
                     {label}
                 </div>
             )}
