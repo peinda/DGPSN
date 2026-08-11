@@ -114,9 +114,8 @@ export default function AppLayout({ children }) {
 
                     {can('referentiels.gerer') && (
                         <NavGroup open={sidebarOpen} icon="book" label="Référentiels">
-                            <NavItem open={sidebarOpen} href="/referentiels/types-aide" label="Types d'aide" active={isActive('/referentiels/types-aide')} sub />
                             <NavItem open={sidebarOpen} href="/referentiels/prestataires" label="Prestataires" active={isActive('/referentiels/prestataires')} sub />
-                            <NavItem open={sidebarOpen} href="/referentiels/evenements" label="Événements" active={isActive('/referentiels/evenements')} sub />
+                            <NavItem open={sidebarOpen} href="/referentiels/evenements" label="Événements & Types d'aide" active={isActive('/referentiels/evenements')} sub />
                             <NavItem open={sidebarOpen} href="/referentiels/periodes" label="Périodes d'ouverture" active={isActive('/referentiels/periodes')} sub />
                             <NavItem open={sidebarOpen} href="/referentiels/annees" label="Années de gestion" active={isActive('/referentiels/annees')} sub />
                         </NavGroup>

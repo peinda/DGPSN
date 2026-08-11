@@ -29,6 +29,8 @@ class Demande extends Model
         'montant_total',
         'montant_approuve',
         'commentaire',
+        'analyse',
+        'observation',
         'date_soumission',
         'date_deliberation',
         'date_cloture',

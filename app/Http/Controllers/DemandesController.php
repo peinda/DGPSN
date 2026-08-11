@@ -98,10 +98,12 @@ class DemandesController extends Controller
             'evenement_id'        => 'nullable|exists:evenements,id',
             'annee_gestion_id'    => 'required|exists:annees_gestion,id',
             'periode_ouverture_id'=> 'nullable|exists:periodes_ouverture,id',
+            'analyse'             => 'nullable|string|max:5000',
             // Prestataires
             'prestataires'        => 'nullable|array',
             'prestataires.*.id'   => 'required|exists:prestataires,id',
             'prestataires.*.montant_estime' => 'required|numeric|min:0',
+            'observation'         => 'nullable|string|max:5000',
             // Pièces jointes
             'pieces_jointes'        => 'nullable|array',
             'pieces_jointes.*'      => 'file|mimes:pdf,jpg,jpeg,png|max:102400',
@@ -178,6 +180,8 @@ class DemandesController extends Controller
                 'periode_ouverture_id'=> $data['periode_ouverture_id'] ?? null,
                 'agent_id'            => Auth::id(),
                 'statut'              => StatutDemande::BROUILLON,
+                'analyse'             => $data['analyse'] ?? null,
+                'observation'         => $data['observation'] ?? null,
             ]);
 
             // Attacher les prestataires
@@ -327,6 +331,8 @@ class DemandesController extends Controller
             'evenement_id'         => 'nullable|exists:evenements,id',
             'annee_gestion_id'     => 'required|exists:annees_gestion,id',
             'periode_ouverture_id' => 'nullable|exists:periodes_ouverture,id',
+            'analyse'              => 'nullable|string|max:5000',
+            'observation'          => 'nullable|string|max:5000',
             'prestataires'         => 'nullable|array',
             'prestataires.*.id'    => 'required|exists:prestataires,id',
             'prestataires.*.montant_estime' => 'required|numeric|min:0',
@@ -338,6 +344,8 @@ class DemandesController extends Controller
                 'evenement_id'         => $data['evenement_id']         ?? null,
                 'annee_gestion_id'     => $data['annee_gestion_id'],
                 'periode_ouverture_id' => $data['periode_ouverture_id'] ?? null,
+                'analyse'              => $data['analyse'] ?? null,
+                'observation'          => $data['observation'] ?? null,
             ]);
 
             // Sync prestataires

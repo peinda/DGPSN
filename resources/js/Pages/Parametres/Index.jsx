@@ -229,56 +229,58 @@ export default function ParametresIndex({ userData, typesAide = [], isAdmin = fa
                             </button>
                         </div>
 
-                        <table className="w-full text-sm">
-                            <thead>
-                                <tr className="text-xs text-gray-500 bg-gray-50 border-b border-gray-100">
-                                    <th className="text-left px-5 py-3 font-medium">Nom</th>
-                                    <th className="text-left px-4 py-3 font-medium">Code</th>
-                                    <th className="text-left px-4 py-3 font-medium">Description</th>
-                                    <th className="text-center px-4 py-3 font-medium">Demandes</th>
-                                    <th className="text-center px-4 py-3 font-medium">Statut</th>
-                                    <th className="text-right px-5 py-3 font-medium">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {typesAide.map((type) => (
-                                    <tr key={type.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
-                                        <td className="px-5 py-3 font-medium text-gray-900">{type.nom}</td>
-                                        <td className="px-4 py-3 font-mono text-xs text-gray-600 bg-gray-50/50">{type.code}</td>
-                                        <td className="px-4 py-3 text-gray-500 text-xs max-w-xs truncate">{type.description ?? '—'}</td>
-                                        <td className="px-4 py-3 text-center">
-                                            <span className="text-sm font-semibold text-gray-700">{type.demandes_count}</span>
-                                        </td>
-                                        <td className="px-4 py-3 text-center">
-                                            <button onClick={() => toggleActif(type)}
-                                                className={[type.actif ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-gray-100 text-gray-500 hover:bg-gray-200', 'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors'].join(' ')}>
-                                                <span className={[type.actif ? 'bg-green-500' : 'bg-gray-400', 'w-1.5 h-1.5 rounded-full'].join(' ')}></span>
-                                                {type.actif ? 'Actif' : 'Inactif'}
-                                            </button>
-                                        </td>
-                                        <td className="px-5 py-3 text-right">
-                                            <div className="flex items-center justify-end gap-2">
-                                                <button onClick={() => ouvrirEdition(type)} className="text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors">
-                                                    Modifier
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm">
+                                <thead>
+                                    <tr className="text-xs text-gray-500 bg-gray-50 border-b border-gray-100">
+                                        <th className="text-left px-5 py-3 font-medium whitespace-nowrap">Nom</th>
+                                        <th className="text-left px-4 py-3 font-medium whitespace-nowrap">Code</th>
+                                        <th className="text-left px-4 py-3 font-medium">Description</th>
+                                        <th className="text-center px-4 py-3 font-medium whitespace-nowrap">Demandes</th>
+                                        <th className="text-center px-4 py-3 font-medium whitespace-nowrap">Statut</th>
+                                        <th className="text-right px-5 py-3 font-medium whitespace-nowrap">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {typesAide.map((type) => (
+                                        <tr key={type.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                                            <td className="px-5 py-3 font-medium text-gray-900 whitespace-nowrap">{type.nom}</td>
+                                            <td className="px-4 py-3 font-mono text-xs text-gray-600 bg-gray-50/50 whitespace-nowrap">{type.code}</td>
+                                            <td className="px-4 py-3 text-gray-500 text-xs max-w-40 truncate">{type.description ?? '—'}</td>
+                                            <td className="px-4 py-3 text-center whitespace-nowrap">
+                                                <span className="text-sm font-semibold text-gray-700">{type.demandes_count}</span>
+                                            </td>
+                                            <td className="px-4 py-3 text-center whitespace-nowrap">
+                                                <button onClick={() => toggleActif(type)}
+                                                    className={[type.actif ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-gray-100 text-gray-500 hover:bg-gray-200', 'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors'].join(' ')}>
+                                                    <span className={[type.actif ? 'bg-green-500' : 'bg-gray-400', 'w-1.5 h-1.5 rounded-full'].join(' ')}></span>
+                                                    {type.actif ? 'Actif' : 'Inactif'}
                                                 </button>
-                                                {type.demandes_count === 0 && (
-                                                    <button onClick={() => confirmerSuppression(type)} className="text-xs text-red-500 hover:text-red-700 font-medium transition-colors">
-                                                        Supprimer
+                                            </td>
+                                            <td className="px-5 py-3 text-right whitespace-nowrap">
+                                                <div className="flex items-center justify-end gap-2">
+                                                    <button onClick={() => ouvrirEdition(type)} className="text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors">
+                                                        Modifier
                                                     </button>
-                                                )}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                                {!typesAide.length && (
-                                    <tr>
-                                        <td colSpan={6} className="px-5 py-12 text-center text-sm text-gray-400">
-                                            Aucun type d'aide configuré.
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
+                                                    {type.demandes_count === 0 && (
+                                                        <button onClick={() => confirmerSuppression(type)} className="text-xs text-red-500 hover:text-red-700 font-medium transition-colors">
+                                                            Supprimer
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    {!typesAide.length && (
+                                        <tr>
+                                            <td colSpan={6} className="px-5 py-12 text-center text-sm text-gray-400">
+                                                Aucun type d'aide configuré.
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>

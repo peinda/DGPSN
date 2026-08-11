@@ -7,6 +7,8 @@
 
         <title inertia>DGPSN</title>
 
+        <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}" />
+
         @routes
         @viteReactRefresh
         @vite(['resources/css/app.css', 'resources/js/app.jsx'])

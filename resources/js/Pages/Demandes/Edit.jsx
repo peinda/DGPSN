@@ -15,12 +15,15 @@ export default function DemandesEdit({ demande, typesAide = [], prestataires = [
         evenement_id: demande.evenement_id ?? '',
         annee_gestion_id: demande.annee_gestion_id ?? '',
         periode_ouverture_id: demande.periode_ouverture_id ?? '',
+        analyse: demande.analyse ?? '',
+        observation: demande.observation ?? '',
         prestataires: (demande.prestataires ?? []).map((p) => ({
             id: p.id,
             montant_estime: p.pivot?.montant_estime ?? 0,
         })),
     });
 
+    const typeAideCode = typesAide.find((t) => t.id == form.data.type_aide_id)?.code ?? null;
     const evenementsFiltres = typesAide.find((t) => t.id == form.data.type_aide_id)?.evenements ?? [];
 
     const ids = form.data.prestataires.map((p) => p.id);
@@ -99,6 +102,16 @@ export default function DemandesEdit({ demande, typesAide = [], prestataires = [
                                 </select>
                             </div>
                         )}
+
+                        {form.data.type_aide_id && typeAideCode !== 'EVENT_REL' && (
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1.5">Analyse</label>
+                                <textarea value={form.data.analyse} onChange={(e) => form.setData('analyse', e.target.value)}
+                                    rows={3}
+                                    className={['w-full px-3 py-2.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1B3A2D]/20 focus:border-[#1B3A2D]', form.errors.analyse ? 'border-red-300' : 'border-gray-300'].join(' ')} />
+                                {form.errors.analyse && <p className="mt-1 text-xs text-red-600">{form.errors.analyse}</p>}
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -142,6 +155,14 @@ export default function DemandesEdit({ demande, typesAide = [], prestataires = [
                             ))}
                             {!prestatairesDisponibles.length && <p className="text-xs text-gray-400 text-center py-2">Aucun prestataire.</p>}
                         </div>
+                    </div>
+
+                    <div className="mt-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">Observations</label>
+                        <textarea value={form.data.observation} onChange={(e) => form.setData('observation', e.target.value)}
+                            rows={3}
+                            className={['w-full px-3 py-2.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1B3A2D]/20 focus:border-[#1B3A2D]', form.errors.observation ? 'border-red-300' : 'border-gray-300'].join(' ')} />
+                        {form.errors.observation && <p className="mt-1 text-xs text-red-600">{form.errors.observation}</p>}
                     </div>
                 </div>
 

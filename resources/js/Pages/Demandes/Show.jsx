@@ -252,6 +252,22 @@ export default function DemandesShow({ demande }) {
                             </dl>
                         </div>
 
+                        {/* Analyse */}
+                        {demande.analyse && (
+                            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+                                <h2 className="text-sm font-semibold text-gray-700 mb-2">Analyse</h2>
+                                <p className="text-sm text-gray-600 leading-relaxed">{demande.analyse}</p>
+                            </div>
+                        )}
+
+                        {/* Observations */}
+                        {demande.observation && (
+                            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+                                <h2 className="text-sm font-semibold text-gray-700 mb-2">Observations</h2>
+                                <p className="text-sm text-gray-600 leading-relaxed">{demande.observation}</p>
+                            </div>
+                        )}
+
                         {/* Commentaire */}
                         {demande.commentaire && (
                             <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">

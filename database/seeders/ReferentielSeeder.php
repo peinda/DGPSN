@@ -136,11 +136,17 @@ class ReferentielSeeder extends Seeder
                 'description'      => 'Aides distribuées à l\'occasion des fêtes religieuses.',
                 'requiert_periode' => true,
                 'evenements'       => [
+                    // Musulmans
                     ['nom' => 'Tabaski',  'code' => 'TABASKI'],
                     ['nom' => 'Korité',   'code' => 'KORITE'],
                     ['nom' => 'Gamou',    'code' => 'GAMOU'],
                     ['nom' => 'Maouloud', 'code' => 'MAOULOUD'],
                     ['nom' => 'Magal',    'code' => 'MAGAL'],
+                    ['nom' => 'Tamkharite', 'code' => 'TAMKHARITE'],
+                    // Chrétiens
+                    ['nom' => 'Pâques', 'code' => 'PAQUES'],
+                    ['nom' => 'Assomption', 'code' => 'ASSOMPTION'],
+                    ['nom' => 'Noël', 'code' => 'NOEL'],
                 ],
             ],
             [
@@ -148,29 +154,29 @@ class ReferentielSeeder extends Seeder
                 'code'             => 'ASSIST_MED',
                 'description'      => 'Prise en charge d\'ordonnances médicales pour personnes vulnérables.',
                 'requiert_periode' => false,
-                'evenements'       => [
-                    ['nom' => 'Aide médicale générale', 'code' => 'MED_GENERAL'],
-                ],
+                'evenements'       => [],
             ],
             [
                 'nom'              => 'Prise en charge hospitalière',
                 'code'             => 'HOSP',
                 'description'      => 'Frais d\'hospitalisation pour indigents.',
                 'requiert_periode' => false,
-                'evenements'       => [
-                    ['nom' => 'Hospitalisation', 'code' => 'HOSP_GENERAL'],
-                ],
+                'evenements'       => [],
             ],
             [
                 'nom'              => 'Urgence sociale',
                 'code'             => 'URGENCE',
                 'description'      => 'Aides exceptionnelles pour situations d\'urgence.',
                 'requiert_periode' => false,
-                'evenements'       => [
-                    ['nom' => 'Aide d\'urgence', 'code' => 'URGENCE_GENERAL'],
-                ],
+                'evenements'       => [],
             ],
         ];
+
+        // Anciens événements génériques qui ne faisaient que reprendre le nom de leur
+        // type d'aide (un seul événement placeholder par type) — retirés du catalogue
+        // ci-dessus au profit d'une liste unique d'événements religieux musulmans et
+        // chrétiens. Les demandes qui les référencent passent à evenement_id = null.
+        Evenement::whereIn('code', ['MED_GENERAL', 'HOSP_GENERAL', 'URGENCE_GENERAL'])->delete();
 
         foreach ($catalogue as $item) {
             $type = TypeAide::firstOrCreate(

@@ -115,7 +115,7 @@ export default function DemandesCreate({
         citoyen_id: null,
         cin: '', nom: '', prenom: '', telephone: '', date_naissance: '', adresse: '', commune_id: '',
         type_aide_id: '', evenement_id: '', annee_gestion_id: annees[0]?.id ?? '',
-        periode_ouverture_id: '',
+        periode_ouverture_id: '', analyse: '', observation: '',
         prestataires: [],
         pieces_jointes: [],
     });
@@ -562,6 +562,16 @@ export default function DemandesCreate({
                                 <p className="text-sm text-blue-700">Ce type d'aide est disponible à tout moment — aucune période d'ouverture requise.</p>
                             </div>
                         )}
+
+                        {form.data.type_aide_id && typeAideCode !== 'EVENT_REL' && (
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1.5">Analyse</label>
+                                <textarea value={form.data.analyse} onChange={(e) => form.setData('analyse', e.target.value)}
+                                    rows={3}
+                                    className={['w-full px-3 py-2.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1B3A2D]/20 focus:border-[#1B3A2D]', form.errors.analyse ? 'border-red-300' : 'border-gray-300'].join(' ')} />
+                                {form.errors.analyse && <p className="mt-1 text-xs text-red-600">{form.errors.analyse}</p>}
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -612,6 +622,14 @@ export default function DemandesCreate({
                             ))}
                             {!prestatairesDisponibles.length && <p className="text-xs text-gray-400 text-center py-3">Aucun prestataire disponible.</p>}
                         </div>
+                    </div>
+
+                    <div className="mt-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">Observations</label>
+                        <textarea value={form.data.observation} onChange={(e) => form.setData('observation', e.target.value)}
+                            rows={3}
+                            className={['w-full px-3 py-2.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1B3A2D]/20 focus:border-[#1B3A2D]', form.errors.observation ? 'border-red-300' : 'border-gray-300'].join(' ')} />
+                        {form.errors.observation && <p className="mt-1 text-xs text-red-600">{form.errors.observation}</p>}
                     </div>
                 </div>
 
