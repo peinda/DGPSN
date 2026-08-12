@@ -55,9 +55,10 @@ class DashboardController extends Controller
 
         // --- Répartition par type d'aide ---
         $repartition = TypeAide::withCount(['demandes' => fn ($q) => $q->when($isAgent, fn ($q) => $q->where('agent_id', $agentId))])
-            ->having('demandes_count', '>', 0)
-            ->orderByDesc('demandes_count')
             ->get()
+            ->filter(fn ($t) => $t->demandes_count > 0)
+            ->sortByDesc('demandes_count')
+            ->values()
             ->map(fn ($t) => [
                 'label' => $t->nom,
                 'value' => $t->demandes_count,
